@@ -1,0 +1,12 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-blue: #161D36;
+  --color-brand-yellow: #F7E842;
+  --color-brand-white: #FFFFFF;
+  --font-sans: 'Montserrat', sans-serif;
+}
+
+html, body {
+  @apply bg-brand-blue text-brand-white antialiased overflow-x-hidden;
+}
