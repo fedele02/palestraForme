@@ -44,7 +44,7 @@ export const HeroSection = () => {
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
-            className="text-6xl md:text-8xl font-black text-white leading-[0.9] uppercase tracking-tighter"
+            className="text-5xl sm:text-6xl md:text-6xl lg:text-7xl xl:text-8xl font-black text-white leading-[0.9] uppercase tracking-tighter break-words md:break-normal"
           >
             Power <br/>
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#F7E842] to-white italic">

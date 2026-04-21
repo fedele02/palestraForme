@@ -16,7 +16,7 @@ export const ContactFooter = () => {
               transition={{ duration: 0.8 }}
               className="lg:w-1/2"
             >
-              <h2 className="text-5xl md:text-7xl font-black text-white uppercase tracking-tighter mb-8 cursor-default">
+              <h2 className="text-4xl sm:text-5xl md:text-5xl lg:text-7xl font-black text-white uppercase tracking-tighter mb-8 cursor-default break-words md:break-normal">
                 Join The <br/> <span className="text-[#F7E842]">Movement</span> 
               </h2>
               <p className="text-gray-400 font-light text-lg mb-12 max-w-md">   

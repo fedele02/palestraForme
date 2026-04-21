@@ -56,7 +56,7 @@ export const CoursesSection = () => {
             <h2 className="text-[#F7E842] tracking-[0.4em] text-sm font-bold uppercase">Le nostre discipline</h2>
           </div>
           
-          <h3 className="text-5xl md:text-7xl lg:text-8xl font-black text-white uppercase tracking-tighter leading-[0.9]">
+          <h3 className="text-4xl sm:text-5xl md:text-5xl lg:text-7xl xl:text-8xl font-black text-white uppercase tracking-tighter leading-[0.9] break-words md:break-normal">
             Scopri il<br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#F7E842] to-yellow-600">Movimento</span>
           </h3>
@@ -102,7 +102,7 @@ export const CoursesSection = () => {
                     <div className="h-1 w-16 bg-[#F7E842]"></div>
                   </div>
                   
-                  <h4 className="text-6xl md:text-7xl lg:text-8xl font-black text-white uppercase tracking-tighter mb-8 leading-[0.9]">
+                  <h4 className="text-4xl sm:text-5xl md:text-5xl lg:text-6xl xl:text-7xl font-black text-white uppercase tracking-tighter mb-4 md:mb-8 leading-[0.9] break-words md:break-normal">
                     {course.title}
                   </h4>
                   
