@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <path
+    d="M36 26V10.5C36 9 34.8 7.8 33.3 7.8H31C29.5 7.8 28.3 8.7 27.7 10.1L13.9 41.4C13.2 42.9 14.3 44.6 15.9 44.6H25.5L26.5 38.5L27.8 49.8L29 41.5L30 44.6H34.1C35.2 44.6 36 45.4 36 46.5V54.3C36 55.8 37.2 57 38.7 57H43C44.5 57 45.7 55.8 45.7 54.3V48.7C45.7 47.3 46.8 46.2 48.2 46.2H49.3C50.8 46.2 52 45 52 43.5V42.6"
+    stroke="#F7E842"
+    stroke-width="3"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <text
+    x="35.3"
+    y="33.6"
+    fill="#FFFFFF"
+    font-size="14"
+    font-weight="800"
+    font-family="Montserrat, Arial, sans-serif"
+    letter-spacing="-0.6"
+  >ME</text>
+</svg>
