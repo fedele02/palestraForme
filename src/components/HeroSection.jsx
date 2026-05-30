@@ -10,7 +10,7 @@ export const HeroSection = () => {
   const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
 
   return (
-    <section ref={ref} className="relative w-full h-screen flex items-center justify-center overflow-hidden bg-[#161D36] pt-20">
+    <section ref={ref} className="relative w-full min-h-[100dvh] flex items-center justify-center overflow-hidden bg-[#161D36] pt-24 pb-10 xl:pt-32 xl:pb-16">
       {/* Immagine Background Intera Parallasse */}
       <motion.div 
         style={{ y: backgroundY }}
@@ -34,44 +34,52 @@ export const HeroSection = () => {
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="flex items-center space-x-4 mb-4"
+            className="flex items-center space-x-4 mb-3 sm:mb-4"
           >
             <div className="w-12 h-1 bg-[#F7E842]"></div>
-            <p className="text-[#F7E842] font-bold tracking-[0.3em] uppercase text-sm">Laterza, Italia</p>
+            <p className="text-[#F7E842] font-bold tracking-[0.3em] uppercase text-[11px] sm:text-sm">Laterza, Italia</p>
           </motion.div>
 
           <motion.h1
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
-            className="text-5xl sm:text-6xl md:text-6xl lg:text-7xl xl:text-8xl font-black text-white leading-[0.9] uppercase tracking-tighter break-words md:break-normal"
+            className="text-[32px] sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black text-white leading-[1.05] sm:leading-[1.1] uppercase tracking-wide sm:tracking-tighter"
           >
-            Power <br/>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#F7E842] to-white italic">
-              Fitness
-            </span> <br/>
-            Experience
+            <span className="block">Non aspettare</span>
+            <span className="block whitespace-nowrap">il cambiamento.</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#F7E842] to-[#FFF] italic block mt-0 sm:mt-1">
+              Crealo.
+            </span>
           </motion.h1>
 
-          <motion.p
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.6 }}
-            className="mt-6 text-gray-300 text-lg md:text-xl font-light max-w-md leading-relaxed"
+            className="mt-4 sm:mt-6 max-w-lg"
           >
-            Non una semplice palestra. Un'esperienza viscerale progettata per spingere i tuoi limiti e trasformare il tuo corpo con i corsi più esclusivi.
-          </motion.p>
+            <p className="text-[#F7E842] font-bold text-lg sm:text-xl md:text-2xl tracking-[0.2em] mb-2 sm:mb-3">
+              <span className="uppercase">#4ME</span>dable
+            </p>
+            <div className="flex flex-col space-y-1 sm:space-y-1.5 border-l-2 border-[#F7E842]/50 pl-3 sm:pl-4 py-1">
+              <p className="text-gray-300 text-sm sm:text-base md:text-lg font-light leading-snug">Allenamenti personalizzati</p>
+              <p className="text-gray-300 text-sm sm:text-base md:text-lg font-light leading-snug">Personale qualificato</p>
+              <p className="text-gray-300 text-sm sm:text-base md:text-lg font-light leading-snug">Ambiente motivante</p>
+              <p className="text-gray-300 text-sm sm:text-base md:text-lg font-light leading-snug">Risultati visibili</p>
+            </div>
+          </motion.div>
 
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, delay: 0.8 }}
-            className="mt-10 flex space-x-6"
+            className="mt-6 sm:mt-8 flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-6 w-full sm:w-auto"
           >
-            <a href="#corsi" className="relative uppercase font-bold tracking-widest bg-[#F7E842] text-[#161D36] px-8 py-4 rounded hover:bg-white transition-colors duration-300 shadow-[0_0_20px_rgba(247,232,66,0.3)] hover:shadow-[0_0_30px_rgba(247,232,66,0.6)]">
+            <a href="#corsi" className="relative uppercase font-bold tracking-widest bg-[#F7E842] text-[#161D36] px-6 py-3.5 sm:px-8 sm:py-4 rounded hover:bg-white transition-colors duration-300 shadow-[0_0_20px_rgba(247,232,66,0.3)] hover:shadow-[0_0_30px_rgba(247,232,66,0.6)] text-center w-full sm:w-auto text-[13px] sm:text-sm md:text-base">
               Scopri i Corsi
             </a>
-            <a href="#contatti" className="relative uppercase font-bold tracking-widest text-[#F7E842] border-2 border-[#F7E842] px-8 py-4 rounded hover:bg-[#F7E842] hover:text-[#161D36] transition-all duration-300">
+            <a href="#contatti" className="relative uppercase font-bold tracking-widest text-[#F7E842] border-2 border-[#F7E842] px-6 py-3.5 sm:px-8 sm:py-4 rounded hover:bg-[#F7E842] hover:text-[#161D36] transition-all duration-300 text-center w-full sm:w-auto text-[13px] sm:text-sm md:text-base">
               Contattaci
             </a>
           </motion.div>
@@ -96,21 +104,6 @@ export const HeroSection = () => {
         </motion.div>
 
       </div>
-      
-      {/* Scroll indicator Bottom */}
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.5, duration: 1 }}
-        className="absolute bottom-10 left-1/2 transform -translate-x-1/2 flex flex-col items-center"
-      >
-        <span className="text-xs text-white uppercase tracking-[0.2em] font-bold mb-2">Scroll</span>
-        <motion.div 
-          animate={{ y: [0, 10, 0] }}
-          transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-          className="w-[2px] h-12 bg-gradient-to-b from-[#F7E842] to-transparent"
-        />
-      </motion.div>
     </section>
   );
 };
