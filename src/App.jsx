@@ -34,6 +34,9 @@ function App() {
 			<Router>
 				<Routes>
 					<Route path="/" element={<MainSite />} />
+					<Route path="/classes" element={<MainSite />} />
+					<Route path="/offers" element={<MainSite />} />
+					<Route path="/contacts" element={<MainSite />} />
 					<Route
 						path="/gestore-forme-2026"
 						element={

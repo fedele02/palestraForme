@@ -16,9 +16,11 @@ export const Navbar = ({ hasOffers = false }) => {
     { name: 'Contatti', sectionId: 'contatti', path: '/contacts' },
   ];
 
-  // Reset URL al caricamento (SPA)
+  // Al refresh, resetta sempre URL, scroll e sezione attiva a Home
   useEffect(() => {
-    if (window.location.pathname !== '/') history.replaceState(null, '', '/');
+    history.replaceState(null, '', '/');
+    window.scrollTo(0, 0);
+    setActiveSection('Home');
   }, []);
 
   // Scroll background
