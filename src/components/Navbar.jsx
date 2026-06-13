@@ -9,9 +9,8 @@ export const Navbar = () => {
 
   const navLinks = [
     { name: 'Home', href: '#' },
-    { name: 'Offerte', href: '#offerte' },
     { name: 'Corsi', href: '#corsi' },
-    { name: 'Chi Siamo', href: '#about' },
+    { name: 'Offerte', href: '#offerte' },
     { name: 'Contatti', href: '#contatti' },
   ];
 
@@ -20,7 +19,7 @@ export const Navbar = () => {
       setScrolled(window.scrollY > 50);
 
       // Scroll Spy Logic
-      const sections = ['offerte', 'corsi', 'about', 'contatti'];
+      const sections = ['offerte', 'corsi', 'contatti'];
       let current = 'Home';
       for (const section of sections) {
         const element = document.getElementById(section);

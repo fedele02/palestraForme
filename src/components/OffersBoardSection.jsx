@@ -1,49 +1,16 @@
 import { motion } from 'framer-motion';
-import { Flame, Timer, Gift, Sparkles, ArrowRight } from 'lucide-react';
-
-const offers = [
-  {
-    id: 1,
-    tag: 'Flash Deal',
-    title: 'Ingresso + Check InBody',
-    subtitle: 'Solo per nuovi iscritti',
-    detail: 'Valutazione completa della composizione corporea e piano iniziale personalizzato incluso.',
-    price: '29€',
-    oldPrice: '59€',
-    accent: 'from-[#F7E842] to-[#F3C318]',
-    glow: 'rgba(247,232,66,0.15)',
-    icon: Flame,
-    valid: '01/05 - 31/05'
-  },
-  {
-    id: 2,
-    tag: 'Pack Premium',
-    title: '3 Mesi Unlimited',
-    subtitle: 'Accesso totale ai corsi',
-    detail: 'Spinning, HIIT, Yoga, Pilates e area funzionale senza limiti, con onboarding dedicato.',
-    price: '149€',
-    oldPrice: '210€',
-    accent: 'from-[#5CE1E6] to-[#3DB8DE]',
-    glow: 'rgba(92,225,230,0.15)',
-    icon: Gift,
-    valid: '05/05 - 30/06'
-  },
-  {
-    id: 3,
-    tag: 'Bring a Friend',
-    title: 'Allenati in Due',
-    subtitle: 'Promo coppia o amici',
-    detail: 'Sconto istantaneo sull\'abbonamento mensile se vi iscrivete insieme nello stesso giorno.',
-    price: '-20%',
-    oldPrice: 'Promo limitata',
-    accent: 'from-[#C4FF36] to-[#8FEA19]',
-    glow: 'rgba(196,255,54,0.15)',
-    icon: Sparkles,
-    valid: '10/05 - 09/06'
-  }
-];
+import { Timer, ArrowRight } from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
+import { usePromotions } from '../hooks/usePromotions';
+import { EditButton } from './admin/EditButton';
+import { useNavigate } from 'react-router-dom';
 
 export const OffersBoardSection = () => {
+  const { promotions, loading } = usePromotions();
+  const navigate = useNavigate();
+
+  const activePromotions = promotions.filter(p => p.is_active);
+
   return (
     <section id="offerte" className="relative overflow-hidden bg-[#0A0E27] py-28 md:py-40 z-10">
       
@@ -79,83 +46,95 @@ export const OffersBoardSection = () => {
           </p>
         </motion.div>
 
-        {/* Griglia Card Eleganti e Dinamiche */}
-        <div className="grid gap-8 lg:grid-cols-3">
-          {offers.map((offer, idx) => {
-            const Icon = offer.icon;
-            
-            return (
-              <motion.article
-                key={offer.id}
-                initial={{ opacity: 0, y: 50 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-50px' }}
-                transition={{ duration: 0.6, delay: idx * 0.15 }}
-                className="group relative flex flex-col justify-between overflow-hidden rounded-[2rem] bg-[#101530] border border-white/5 shadow-xl transition-all duration-500 hover:-translate-y-3 hover:shadow-2xl hover:border-white/10"
-              >
-                {/* Bagliore Di Fondo (Morbido e non esagerato) */}
-                <div 
-                  className="absolute inset-0 transition-opacity duration-700 opacity-0 group-hover:opacity-100 pointer-events-none"
-                  style={{ background: `radial-gradient(circle at top right, ${offer.glow} 0%, transparent 70%)` }}
-                />
-                
-                {/* Linea di accento superiore */}
-                <div className={`h-1.5 w-full bg-gradient-to-r ${offer.accent}`} />
+        {loading ? (
+          <div className="text-center text-[#F7E842] font-bold text-2xl uppercase tracking-widest py-20">
+            Caricamento Offerte...
+          </div>
+        ) : (
+          <div className="grid gap-8 lg:grid-cols-3">
+            {activePromotions.map((offer, idx) => {
+              const Icon = LucideIcons[offer.icon_name] || LucideIcons.Flame;
+              
+              return (
+                <motion.article
+                  key={offer.id}
+                  initial={{ opacity: 0, y: 50 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-50px' }}
+                  transition={{ duration: 0.6, delay: idx * 0.15 }}
+                  className="group relative flex flex-col justify-between overflow-hidden rounded-[2rem] bg-[#101530] border border-white/5 shadow-xl transition-all duration-500 hover:-translate-y-3 hover:shadow-2xl hover:border-white/10"
+                >
+                  <EditButton 
+                    onClick={() => navigate('/gestore-forme-2026')} 
+                    className="top-2 right-2 scale-75 hover:scale-90" 
+                  />
 
-                <div className="p-8 md:p-10 flex-grow flex flex-col relative z-10">
-                  <div className="flex justify-between items-center mb-8">
-                    <span className="inline-flex items-center rounded-full bg-white/5 border border-white/10 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.15em] text-white">
-                      {offer.tag}
-                    </span>
-                    <div className="rounded-xl bg-white/5 p-2.5 text-white transition-transform duration-500 group-hover:scale-110 group-hover:text-[#F7E842]">
-                      <Icon size={20} />
-                    </div>
-                  </div>
-
-                  <h3 className="text-3xl md:text-4xl lg:text-5xl font-black uppercase leading-[0.95] tracking-tight text-white mb-3">
-                    {offer.title}
-                  </h3>
+                  {/* Bagliore Di Fondo (Morbido e non esagerato) */}
+                  <div 
+                    className="absolute inset-0 transition-opacity duration-700 opacity-0 group-hover:opacity-100 pointer-events-none"
+                    style={{ background: `radial-gradient(circle at top right, ${offer.glow} 0%, transparent 70%)` }}
+                  />
                   
-                  <p className={`text-sm font-bold uppercase tracking-[0.15em] text-transparent bg-gradient-to-r ${offer.accent} bg-clip-text mb-6`}>
-                    {offer.subtitle}
-                  </p>
+                  {/* Linea di accento superiore */}
+                  <div className={`h-1.5 w-full bg-gradient-to-r ${offer.accent}`} />
 
-                  <p className="text-base text-slate-400 font-light leading-relaxed flex-grow mb-8">
-                    {offer.detail}
-                  </p>
-
-                  {/* Prezzo e Scadenza */}
-                  <div className="border-t border-white/5 pt-6 mt-auto">
-                    <div className="flex items-end justify-between mb-6">
-                      <div>
-                        <p className="text-sm font-semibold uppercase tracking-wider text-slate-500 line-through mb-0.5">
-                          {offer.oldPrice}
-                        </p>
-                        <p className="text-4xl md:text-5xl font-black tracking-tighter text-white">
-                          {offer.price}
-                        </p>
+                  <div className="p-8 md:p-10 flex-grow flex flex-col relative z-10">
+                    <div className="flex justify-between items-center mb-8">
+                      <span className="inline-flex items-center rounded-full bg-white/5 border border-white/10 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.15em] text-white">
+                        {offer.tag}
+                      </span>
+                      <div className="rounded-xl bg-white/5 p-2.5 text-white transition-transform duration-500 group-hover:scale-110 group-hover:text-[#F7E842]">
+                        <Icon size={20} />
                       </div>
                     </div>
+
+                    <h3 className="text-3xl md:text-4xl lg:text-5xl font-black uppercase leading-[0.95] tracking-tight text-white mb-3">
+                      {offer.title}
+                    </h3>
                     
-                    <div className="flex items-center justify-between">
-                      <span className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-slate-400">
-                        <Timer size={14} className="text-[#F7E842]" /> 
-                        Scade: {offer.valid.split('-')[1]}
-                      </span>
+                    <p className={`text-sm font-bold uppercase tracking-[0.15em] text-transparent bg-gradient-to-r ${offer.accent} bg-clip-text mb-6`}>
+                      {offer.subtitle}
+                    </p>
+
+                    <p className="text-base text-slate-400 font-light leading-relaxed flex-grow mb-8">
+                      {offer.detail}
+                    </p>
+
+                    {/* Prezzo e Scadenza */}
+                    <div className="border-t border-white/5 pt-6 mt-auto">
+                      <div className="flex items-end justify-between mb-6">
+                        <div>
+                          <p className="text-sm font-semibold uppercase tracking-wider text-slate-500 line-through mb-0.5 min-h-[20px]">
+                            {offer.old_price}
+                          </p>
+                          <p className="text-4xl md:text-5xl font-black tracking-tighter text-white">
+                            {offer.price}
+                          </p>
+                        </div>
+                      </div>
                       
-                      <a
-                        href="#contatti"
-                        className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition-all duration-300 hover:bg-[#F7E842] hover:text-[#101530]"
-                      >
-                        <ArrowRight size={18} />
-                      </a>
+                      <div className="flex items-center justify-between">
+                        {offer.valid_to && (
+                          <span className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                            <Timer size={14} className="text-[#F7E842]" /> 
+                            Scade: {offer.valid_to}
+                          </span>
+                        )}
+                        
+                        <a
+                          href="#contatti"
+                          className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition-all duration-300 hover:bg-[#F7E842] hover:text-[#101530] ml-auto"
+                        >
+                          <ArrowRight size={18} />
+                        </a>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </motion.article>
-            );
-          })}
-        </div>
+                </motion.article>
+              );
+            })}
+          </div>
+        )}
 
       </div>
     </section>

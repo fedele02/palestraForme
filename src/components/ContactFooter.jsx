@@ -1,7 +1,17 @@
 import { motion } from 'framer-motion';
 import { MapPin, Phone, Mail } from 'lucide-react';
+import { useSiteSettings } from '../hooks/useSiteSettings';
 
 export const ContactFooter = () => {
+  const { settings, loading } = useSiteSettings();
+
+  const phone = settings.phone || '+39 333 123 4567';
+  const email = settings.email || 'info@formefitness.it';
+  const address = settings.address || 'ForMe Laterza<br/>Via Industrie Conte<br/>74014 Laterza (Puglia)';
+  const googleMapsUrl = settings.google_maps_url || 'https://maps.app.goo.gl/3q4aM6FwRxKzLg7M8';
+  const instagramUrl = settings.instagram_url || '#';
+  const facebookUrl = settings.facebook_url || '#';
+
   return (
     <>
       <section id="contatti" className="py-32 bg-[#161D36] relative w-full border-t border-[#101529]">
@@ -30,7 +40,7 @@ export const ContactFooter = () => {
                   </div>
                   <div>
                     <h4 className="font-bold uppercase tracking-widest text-[#F7E842] text-sm">Dove Siamo</h4>
-                    <p className="text-gray-300 font-light mt-1 text-lg leading-relaxed">ForMe Laterza<br/>Via Industrie Conte<br/>74014 Laterza (Puglia)</p>   
+                    <p className="text-gray-300 font-light mt-1 text-lg leading-relaxed" dangerouslySetInnerHTML={{ __html: address }}></p>   
                   </div>
                 </div>
 
@@ -40,7 +50,7 @@ export const ContactFooter = () => {
                   </div>
                   <div>
                     <h4 className="font-bold uppercase tracking-widest text-[#F7E842] text-sm">Chiamaci</h4>
-                    <p className="text-gray-300 font-light mt-1 text-lg">+39 333 123 4567</p>
+                    <p className="text-gray-300 font-light mt-1 text-lg">{phone}</p>
                   </div>
                 </div>
 
@@ -50,7 +60,7 @@ export const ContactFooter = () => {
                   </div>
                   <div>
                     <h4 className="font-bold uppercase tracking-widest text-[#F7E842] text-sm">Scrivici</h4>
-                    <p className="text-gray-300 font-light mt-1 text-lg">info@formefitness.it</p>
+                    <p className="text-gray-300 font-light mt-1 text-lg">{email}</p>
                   </div>
                 </div>
               </div>
@@ -82,7 +92,7 @@ export const ContactFooter = () => {
 
                 {/* Link invisibile gigante che copre la mappa per bloccare zoom e trascinamento */}
                 <a 
-                  href="https://maps.app.goo.gl/3q4aM6FwRxKzLg7M8" 
+                  href={googleMapsUrl} 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="absolute inset-0 z-10 flex flex-col items-center justify-center cursor-pointer transition-colors duration-300 hover:bg-[#161D36]/20 group/map"
@@ -113,16 +123,16 @@ export const ContactFooter = () => {
           </div>
 
           <div className="flex space-x-6 mb-6 md:mb-0 text-gray-400">
-            <a href="#" className="hover:text-[#F7E842] transition-colors">     
+            <a href={instagramUrl} target="_blank" rel="noopener noreferrer" className="hover:text-[#F7E842] transition-colors">     
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-instagram"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>     
             </a>
-            <a href="#" className="hover:text-[#F7E842] transition-colors">     
+            <a href={facebookUrl} target="_blank" rel="noopener noreferrer" className="hover:text-[#F7E842] transition-colors">     
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-facebook"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
             </a>
           </div>
 
           <p className="text-gray-500 text-xs tracking-wider">
-            &copy; 2026 ForMe Laterza. Tutti i diritti riservati. <br className="hidden md:block" /> Coded with <span className="text-[#F7E842]"></span>.
+            &copy; {new Date().getFullYear()} ForMe Laterza. Tutti i diritti riservati.
           </p>
 
         </div>
