@@ -44,10 +44,10 @@ export const HeroSection = () => {
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
-            className="text-[32px] sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black text-white leading-[1.05] sm:leading-[1.1] uppercase tracking-wide sm:tracking-tighter"
+            className="text-[28px] min-[360px]:text-[32px] sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black text-white leading-[1.05] sm:leading-[1.1] uppercase tracking-wide sm:tracking-tighter"
           >
             <span className="block">Non aspettare</span>
-            <span className="block whitespace-nowrap">il cambiamento.</span>
+            <span className="block whitespace-normal sm:whitespace-nowrap">il cambiamento.</span>
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#F7E842] to-[#FFF] italic block mt-0 sm:mt-1">
               Crealo.
             </span>

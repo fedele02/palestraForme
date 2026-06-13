@@ -36,7 +36,7 @@ export const AdminPage = () => {
     setLoginError('');
     try {
       await login(email, password);
-    } catch (err) {
+    } catch {
       setLoginError('Credenziali non valide o errore di connessione');
     }
   };

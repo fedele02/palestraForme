@@ -1,140 +1,88 @@
 import { motion } from 'framer-motion';
-import { Timer, ArrowRight } from 'lucide-react';
-import * as LucideIcons from 'lucide-react';
-import { usePromotions } from '../hooks/usePromotions';
-import { EditButton } from './admin/EditButton';
 import { useNavigate } from 'react-router-dom';
+import { EditButton } from './admin/EditButton';
 
-export const OffersBoardSection = () => {
-  const { promotions, loading } = usePromotions();
+export const OffersBoardSection = ({ promotions }) => {
   const navigate = useNavigate();
-
   const activePromotions = promotions.filter(p => p.is_active);
 
   return (
-    <section id="offerte" className="relative overflow-hidden bg-[#0A0E27] py-28 md:py-40 z-10">
-      
-      {/* Sfondo Elegante (Sfumature morbide invece di scritte giganti) */}
+    <section id="offerte" className="relative bg-[#0B0F24] py-24 sm:py-28 md:py-40 z-10 overflow-hidden">
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute -top-40 -left-40 h-[500px] w-[500px] rounded-full bg-[#F7E842]/5 blur-[120px]" />
         <div className="absolute top-1/2 -right-40 h-[600px] w-[600px] rounded-full bg-cyan-400/5 blur-[150px]" />
       </div>
 
-      <div className="relative mx-auto max-w-[1300px] px-6">
-        
-        {/* Intestazione Premium e Pulita */}
+      <div className="relative mx-auto max-w-[1300px] px-5 sm:px-6">
+
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-100px' }}
-          transition={{ duration: 0.7, ease: "easeOut" }}
-          className="mb-20 text-center flex flex-col items-center"
+          transition={{ duration: 0.7 }}
+          className="mb-14 md:mb-20 flex flex-col md:flex-row md:items-end md:justify-between gap-6"
         >
-          <div className="mb-6 inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm px-5 py-2">
-            <Timer size={16} className="text-[#F7E842]" />
-            <span className="text-xs font-bold uppercase tracking-[0.25em] text-white/90">Bacheca Offerte</span>
-          </div>
-
-          <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black uppercase leading-[0.9] tracking-tighter text-white">
-            Promozioni <br className="md:hidden" />
-            <span className="inline-block text-transparent bg-gradient-to-r from-[#F7E842] to-yellow-500 bg-clip-text">
-              In Corso
-            </span>
+          <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black uppercase tracking-tighter leading-[0.9] text-white">
+            Le Nostre<br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#F7E842] to-yellow-600">Promozioni</span>
           </h2>
-          <p className="mt-6 max-w-xl text-lg md:text-xl text-slate-400 font-light">
-            Vivi l'esperienza ForMe con i nostri pacchetti limitati. Trova il piano perfetto per i tuoi obiettivi.
+          <p className="text-gray-400 font-light text-base sm:text-lg max-w-sm md:text-right leading-relaxed">
+            Offerte a tempo limitato.<br className="hidden sm:block" /> Approfitta prima che scadano.
           </p>
         </motion.div>
 
-        {loading ? (
-          <div className="text-center text-[#F7E842] font-bold text-2xl uppercase tracking-widest py-20">
-            Caricamento Offerte...
-          </div>
-        ) : (
-          <div className="grid gap-8 lg:grid-cols-3">
-            {activePromotions.map((offer, idx) => {
-              const Icon = LucideIcons[offer.icon_name] || LucideIcons.Flame;
-              
-              return (
-                <motion.article
-                  key={offer.id}
-                  initial={{ opacity: 0, y: 50 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: '-50px' }}
-                  transition={{ duration: 0.6, delay: idx * 0.15 }}
-                  className="group relative flex flex-col justify-between overflow-hidden rounded-[2rem] bg-[#101530] border border-white/5 shadow-xl transition-all duration-500 hover:-translate-y-3 hover:shadow-2xl hover:border-white/10"
-                >
-                  <EditButton 
-                    onClick={() => navigate('/gestore-forme-2026')} 
-                    className="top-2 right-2 scale-75 hover:scale-90" 
-                  />
+        <div className="flex flex-wrap justify-center gap-5 sm:gap-6">
+          {activePromotions.map((offer, idx) => (
+            <motion.a
+              href="#contatti"
+              key={offer.id}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-50px' }}
+              transition={{ duration: 0.5, delay: (idx % 3) * 0.1 }}
+              className="group relative rounded-3xl overflow-hidden border border-white/10 bg-[#111827] hover:border-[#F7E842]/30 hover:shadow-[0_0_60px_rgba(247,232,66,0.08)] transition-all duration-500 hover:-translate-y-2 cursor-pointer flex flex-col w-full sm:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)] sm:max-w-[440px]"
+            >
+              <EditButton onClick={(e) => { e.preventDefault(); navigate('/gestore-forme-2026'); }} className="top-4 right-4 scale-75" />
 
-                  {/* Bagliore Di Fondo (Morbido e non esagerato) */}
-                  <div 
-                    className="absolute inset-0 transition-opacity duration-700 opacity-0 group-hover:opacity-100 pointer-events-none"
-                    style={{ background: `radial-gradient(circle at top right, ${offer.glow} 0%, transparent 70%)` }}
-                  />
-                  
-                  {/* Linea di accento superiore */}
-                  <div className={`h-1.5 w-full bg-gradient-to-r ${offer.accent}`} />
+              <div className="absolute bottom-0 right-0 w-72 h-72 rounded-full bg-[#F7E842]/5 blur-[80px] opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
 
-                  <div className="p-8 md:p-10 flex-grow flex flex-col relative z-10">
-                    <div className="flex justify-between items-center mb-8">
-                      <span className="inline-flex items-center rounded-full bg-white/5 border border-white/10 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.15em] text-white">
-                        {offer.tag}
-                      </span>
-                      <div className="rounded-xl bg-white/5 p-2.5 text-white transition-transform duration-500 group-hover:scale-110 group-hover:text-[#F7E842]">
-                        <Icon size={20} />
-                      </div>
-                    </div>
+              {/* Fascia prezzo gialla */}
+              <div className="relative bg-[#F7E842] px-6 sm:px-8 pt-7 sm:pt-8 pb-5 sm:pb-6">
+                <p className="text-[#161D36]/60 text-xs font-bold uppercase tracking-[0.25em] mb-1">{offer.tag}</p>
+                <div className="flex items-end gap-3 flex-wrap">
+                  <p className="text-[#161D36] text-5xl sm:text-6xl font-black tracking-tighter leading-none">
+                    {offer.price}
+                  </p>
+                  {offer.old_price && (
+                    <p className="text-[#161D36]/40 text-base sm:text-lg font-bold line-through mb-1">{offer.old_price}</p>
+                  )}
+                </div>
+              </div>
 
-                    <h3 className="text-3xl md:text-4xl lg:text-5xl font-black uppercase leading-[0.95] tracking-tight text-white mb-3">
-                      {offer.title}
-                    </h3>
-                    
-                    <p className={`text-sm font-bold uppercase tracking-[0.15em] text-transparent bg-gradient-to-r ${offer.accent} bg-clip-text mb-6`}>
-                      {offer.subtitle}
-                    </p>
-
-                    <p className="text-base text-slate-400 font-light leading-relaxed flex-grow mb-8">
-                      {offer.detail}
-                    </p>
-
-                    {/* Prezzo e Scadenza */}
-                    <div className="border-t border-white/5 pt-6 mt-auto">
-                      <div className="flex items-end justify-between mb-6">
-                        <div>
-                          <p className="text-sm font-semibold uppercase tracking-wider text-slate-500 line-through mb-0.5 min-h-[20px]">
-                            {offer.old_price}
-                          </p>
-                          <p className="text-4xl md:text-5xl font-black tracking-tighter text-white">
-                            {offer.price}
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center justify-between">
-                        {offer.valid_to && (
-                          <span className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-slate-400">
-                            <Timer size={14} className="text-[#F7E842]" /> 
-                            Scade: {offer.valid_to}
-                          </span>
-                        )}
-                        
-                        <a
-                          href="#contatti"
-                          className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition-all duration-300 hover:bg-[#F7E842] hover:text-[#101530] ml-auto"
-                        >
-                          <ArrowRight size={18} />
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                </motion.article>
-              );
-            })}
-          </div>
-        )}
+              {/* Corpo */}
+              <div className="relative z-10 flex flex-col flex-grow p-6 sm:p-8">
+                <h3 className="text-2xl lg:text-3xl font-black uppercase tracking-tight text-white leading-[1.05] mb-2">
+                  {offer.title}
+                </h3>
+                {offer.subtitle && (
+                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#F7E842] mb-4">
+                    {offer.subtitle}
+                  </p>
+                )}
+                {offer.detail && (
+                  <p className="text-gray-400 font-light text-sm leading-relaxed flex-grow">
+                    {offer.detail}
+                  </p>
+                )}
+                {offer.valid_to && (
+                  <p className="mt-6 text-xs font-light text-gray-600 tracking-wide">
+                    Valida fino al <span className="text-gray-400 font-bold">{offer.valid_to}</span>
+                  </p>
+                )}
+              </div>
+            </motion.a>
+          ))}
+        </div>
 
       </div>
     </section>
