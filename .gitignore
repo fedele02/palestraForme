@@ -27,3 +27,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# strumenti locali
+.playwright-mcp/
+graphify-out/
+.impeccable/review/

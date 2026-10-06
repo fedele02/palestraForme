@@ -1,179 +1,125 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { ArrowLeft, ImagePlus, X } from 'lucide-react';
 import { uploadToCloudinary } from '../../lib/cloudinary';
+import { friendlyError } from '../../hooks/useTable';
+import { Button, ErrorBox, Field, Toggle, inputClass } from './ui';
 
-export const CourseForm = ({ initialData, onSubmit, onCancel }) => {
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    schedule: 'Orari da definire',
-    order_index: 0,
-    is_active: true,
-  });
-  
+const empty = { title: '', description: '', schedule: '', is_active: true, is_new: false, image_url: null, cloudinary_public_id: null };
+
+export const CourseForm = ({ initialData, onSubmit, onCancel, supportsNewFlag = false }) => {
+  const [form, setForm] = useState(() => ({
+    ...empty,
+    ...(initialData || {}),
+    schedule: initialData?.schedule && initialData.schedule !== 'Orari da definire' ? initialData.schedule : '',
+    is_new: !!initialData?.is_new,
+  }));
   const [file, setFile] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [preview, setPreview] = useState(initialData?.image_url || null);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    if (initialData) {
-      setFormData({
-        title: initialData.title || '',
-        description: initialData.description || '',
-        schedule: initialData.schedule || 'Orari da definire',
-        order_index: initialData.order_index || 0,
-        is_active: initialData.is_active !== undefined ? initialData.is_active : true,
-      });
-    }
-  }, [initialData]);
+  const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e?.target ? e.target.value : e }));
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
+  const pickFile = (e) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    setFile(f);
+    setPreview(URL.createObjectURL(f));
   };
 
-  const handleFileChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
-    }
+  const removeImage = () => {
+    setFile(null);
+    setPreview(null);
+    setForm((f) => ({ ...f, image_url: null, cloudinary_public_id: null }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
-
+    if (!form.title.trim()) return setError('Scrivi il nome del corso.');
+    if (!form.description.trim()) return setError('Scrivi una breve descrizione del corso.');
+    setSaving(true);
     try {
-      let imageUrl = initialData?.image_url;
-      let cloudinaryId = initialData?.cloudinary_public_id;
-
+      let { image_url, cloudinary_public_id } = form;
       if (file) {
-        const uploadResult = await uploadToCloudinary(file);
-        imageUrl = uploadResult.url;
-        cloudinaryId = uploadResult.publicId;
+        const uploaded = await uploadToCloudinary(file);
+        image_url = uploaded.url;
+        cloudinary_public_id = uploaded.publicId;
       }
-
-      const finalData = {
-        ...formData,
-        image_url: imageUrl,
-        cloudinary_public_id: cloudinaryId,
+      const data = {
+        title: form.title.trim().toUpperCase(),
+        description: form.description.trim(),
+        schedule: form.schedule.trim() || 'Orari da definire',
+        is_active: form.is_active,
+        image_url,
+        cloudinary_public_id,
+        // is_new va inviato solo se la colonna esiste già nel database (vedi supabase.sql)
+        ...(supportsNewFlag ? { is_new: form.is_new } : {}),
       };
-
-      await onSubmit(finalData);
+      await onSubmit(data);
     } catch (err) {
-      setError(err.message || 'Errore durante il salvataggio del corso');
-    } finally {
-      setLoading(false);
+      setError(friendlyError(err, 'Salvataggio non riuscito. Riprova.'));
+      setSaving(false);
     }
   };
 
   return (
-    <div className="bg-[#161D36] p-8 rounded-2xl border border-white/10 shadow-2xl w-full max-w-2xl mx-auto">
-      <h3 className="text-2xl font-bold text-white mb-6 uppercase tracking-wider">
-        {initialData ? 'Modifica Corso' : 'Nuovo Corso'}
-      </h3>
-      
-      {error && (
-        <div className="bg-red-500/20 border border-red-500 text-red-200 px-4 py-3 rounded mb-6">
-          {error}
-        </div>
-      )}
+    <form onSubmit={handleSubmit} className="pb-28 md:pb-0">
+      <button type="button" onClick={onCancel} className="mb-6 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-mute hover:text-paper">
+        <ArrowLeft size={18} aria-hidden="true" /> Torna ai corsi
+      </button>
+      <h2 className="display mb-8 text-[2.5rem] text-paper md:text-[3rem]">{initialData ? 'Modifica corso' : 'Nuovo corso'}</h2>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <label className="block text-sm font-bold text-gray-400 mb-2">Titolo</label>
-          <input
-            type="text"
-            name="title"
-            value={formData.title}
-            onChange={handleChange}
-            required
-            className="w-full bg-[#0B0F24] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#F7E842] transition-colors"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-bold text-gray-400 mb-2">Descrizione</label>
-          <textarea
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            required
-            rows={4}
-            className="w-full bg-[#0B0F24] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#F7E842] transition-colors"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-bold text-gray-400 mb-2">Orario (es. Mar & Gio - 18:30)</label>
-          <input
-            type="text"
-            name="schedule"
-            value={formData.schedule}
-            onChange={handleChange}
-            className="w-full bg-[#0B0F24] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#F7E842] transition-colors"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-bold text-gray-400 mb-2">Immagine Copertina</label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleFileChange}
-            className="w-full text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-[#F7E842] file:text-[#161D36] hover:file:bg-white transition-all cursor-pointer"
-          />
-          {initialData?.image_url && !file && (
-            <p className="text-xs text-gray-500 mt-2">Immagine attuale presente. Caricane una nuova per sostituirla.</p>
-          )}
-        </div>
-
-        <div className="flex gap-4">
-          <div className="flex-1">
-            <label className="block text-sm font-bold text-gray-400 mb-2">Ordine (numero)</label>
-            <input
-              type="number"
-              name="order_index"
-              value={formData.order_index}
-              onChange={handleChange}
-              className="w-full bg-[#0B0F24] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#F7E842] transition-colors"
-            />
+      <div className="grid gap-8 md:grid-cols-[minmax(0,1fr)_18rem]">
+        <div className="space-y-6">
+          <Field label="Nome del corso" htmlFor="c-title" hint="Viene mostrato in maiuscolo sul sito.">
+            <input id="c-title" value={form.title} onChange={set('title')} className={inputClass} placeholder="Es. PILATES" autoComplete="off" />
+          </Field>
+          <Field label="Descrizione" htmlFor="c-desc" hint="Due o tre frasi: cosa si fa e per chi è adatto.">
+            <textarea id="c-desc" value={form.description} onChange={set('description')} rows={5} className={inputClass} />
+          </Field>
+          <Field label="Giorni e orari" htmlFor="c-sched" optional hint="Es. Lun e Mer 19:00. Se lo lasci vuoto, sul sito non compare nessun orario.">
+            <input id="c-sched" value={form.schedule} onChange={set('schedule')} className={inputClass} placeholder="Es. Mar e Gio 18:30" />
+          </Field>
+          <div className="space-y-3">
+            <Toggle id="c-active" checked={form.is_active} onChange={set('is_active')} label="Visibile sul sito" description="Se lo spegni il corso resta salvato ma non si vede." />
+            {supportsNewFlag && (
+              <Toggle id="c-new" checked={form.is_new} onChange={set('is_new')} label="Segna come nuovo" description="Mostra il bollino giallo NUOVO sulla foto." />
+            )}
           </div>
-          
-          <div className="flex-1 flex items-center mt-8">
-            <label className="flex items-center space-x-3 cursor-pointer">
-              <input
-                type="checkbox"
-                name="is_active"
-                checked={formData.is_active}
-                onChange={handleChange}
-                className="w-5 h-5 rounded border-gray-300 text-[#F7E842] focus:ring-[#F7E842] bg-[#0B0F24]"
-              />
-              <span className="text-white font-bold">Corso Attivo</span>
+        </div>
+
+        <Field label="Foto" optional hint="Meglio orizzontale. Sul sito appare in bianco e nero con il velo blu, come le altre.">
+          {preview ? (
+            <div className="relative overflow-hidden rounded-[4px] border border-line">
+              <img src={preview} alt="" className="aspect-[4/3] w-full object-cover [filter:grayscale(1)]" />
+              <div className="absolute inset-x-2 bottom-2 flex gap-2">
+                <label className="btn btn-sun min-h-10 flex-1 cursor-pointer px-3 text-sm">
+                  <ImagePlus size={16} aria-hidden="true" /> Cambia
+                  <input type="file" accept="image/*" onChange={pickFile} className="sr-only" />
+                </label>
+                <button type="button" onClick={removeImage} className="btn min-h-10 bg-ink/90 px-3 text-sm text-paper">
+                  <X size={16} aria-hidden="true" /> Togli
+                </button>
+              </div>
+            </div>
+          ) : (
+            <label className="flex aspect-[4/3] cursor-pointer flex-col items-center justify-center gap-2 rounded-[4px] border border-dashed border-paper/30 bg-ink-deep text-center text-sm text-mute transition-colors hover:border-sun hover:text-paper">
+              <ImagePlus size={28} strokeWidth={1.5} className="text-sun" aria-hidden="true" />
+              <span className="font-semibold text-paper">Carica una foto</span>
+              <span>Senza foto il sito usa un'immagine di riserva.</span>
+              <input type="file" accept="image/*" onChange={pickFile} className="sr-only" />
             </label>
-          </div>
-        </div>
+          )}
+        </Field>
+      </div>
 
-        <div className="flex justify-end space-x-4 pt-6 border-t border-white/10">
-          <button
-            type="button"
-            onClick={onCancel}
-            disabled={loading}
-            className="px-6 py-3 rounded-lg font-bold text-gray-400 hover:text-white transition-colors disabled:opacity-50"
-          >
-            Annulla
-          </button>
-          <button
-            type="submit"
-            disabled={loading}
-            className="px-6 py-3 rounded-lg font-bold bg-[#F7E842] text-[#161D36] hover:bg-white transition-colors disabled:opacity-50 flex items-center"
-          >
-            {loading ? 'Salvataggio...' : 'Salva Corso'}
-          </button>
-        </div>
-      </form>
-    </div>
+      <div className="mt-8"><ErrorBox>{error}</ErrorBox></div>
+
+      <div className="fixed inset-x-0 bottom-0 z-30 flex gap-3 border-t border-line bg-ink px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] md:static md:mt-8 md:border-0 md:bg-transparent md:p-0">
+        <Button type="button" variant="ghost" onClick={onCancel} className="flex-1 md:flex-none">Annulla</Button>
+        <Button type="submit" loading={saving} className="flex-[2] md:flex-none">{saving ? 'Salvataggio…' : 'Salva corso'}</Button>
+      </div>
+    </form>
   );
 };

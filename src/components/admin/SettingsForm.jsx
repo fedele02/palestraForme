@@ -1,161 +1,127 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { ExternalLink } from 'lucide-react';
 import { useSiteSettings } from '../../hooks/useSiteSettings';
+import { friendlyError } from '../../hooks/useTable';
+import { SETTINGS_KEYS, buildSiteInfo, mapsEmbedUrl } from '../../lib/siteInfo';
+import { Button, ErrorBox, Field, inputClass } from './ui';
 
-export const SettingsForm = () => {
-  const { settings, loading: loadingSettings, updateMultipleSettings } = useSiteSettings();
-  
-  const [formData, setFormData] = useState({
-    phone: '',
-    email: '',
-    address: '',
-    instagram_url: '',
-    facebook_url: '',
-    google_maps_url: '',
-  });
-  
+// Nel database l'indirizzo va a capo con <br/>; nel modulo si usano righe normali
+const toLines = (v = '') => v.replace(/<br\s*\/?>/gi, '\n');
+const fromLines = (v = '') => v.split('\n').map((l) => l.trim()).filter(Boolean).join('<br/>');
+
+const Section = ({ title, children }) => (
+  <section className="space-y-6 border-t border-line pt-6">
+    <h3 className="display text-[1.75rem] text-sun">{title}</h3>
+    {children}
+  </section>
+);
+
+export const SettingsForm = ({ onSaved }) => {
+  const { settings, loading, updateMultipleSettings } = useSiteSettings();
+  const [form, setForm] = useState(null);
   const [saving, setSaving] = useState(false);
-  const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
 
+  // Precompila con i valori salvati (o con quelli che il sito sta già mostrando)
   useEffect(() => {
-    if (Object.keys(settings).length > 0) {
-      setFormData({
-        phone: settings.phone || '',
-        email: settings.email || '',
-        address: settings.address || '',
-        instagram_url: settings.instagram_url || '',
-        facebook_url: settings.facebook_url || '',
-        google_maps_url: settings.google_maps_url || '',
-      });
-    }
-  }, [settings]);
+    if (loading || form) return;
+    const info = buildSiteInfo(settings);
+    const initial = {};
+    SETTINGS_KEYS.forEach((k) => { initial[k] = settings[k] || ''; });
+    initial.phone ||= info.phone;
+    initial.email ||= info.email;
+    initial.address = toLines(initial.address || info.addressLines.join('\n'));
+    initial.opening_hours = toLines(initial.opening_hours);
+    initial.facebook_url ||= info.facebookUrl;
+    setForm(initial);
+  }, [loading, settings, form]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
+  if (!form) return <p className="py-10 text-mute">Caricamento…</p>;
+
+  const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
+  const mapQuery = form.maps_query.trim() || fromLines(form.address).replace(/<br\/>/g, ', ');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setSaving(true);
     setError('');
-    setSuccess(false);
-
+    if (!form.phone.trim()) return setError('Il numero di telefono serve: è il contatto principale del sito.');
+    for (const key of ['google_maps_url', 'instagram_url', 'facebook_url']) {
+      const v = form[key].trim();
+      if (v && !/^https?:\/\//.test(v)) return setError('I link devono iniziare con https:// (copiali dalla barra del browser).');
+    }
+    setSaving(true);
     try {
-      await updateMultipleSettings(formData);
-      setSuccess(true);
-      setTimeout(() => setSuccess(false), 3000);
+      const values = {};
+      SETTINGS_KEYS.forEach((k) => { values[k] = (form[k] || '').trim(); });
+      values.address = fromLines(form.address);
+      values.opening_hours = fromLines(form.opening_hours);
+      await updateMultipleSettings(values);
+      onSaved?.();
     } catch (err) {
-      setError(err.message || 'Errore durante il salvataggio delle impostazioni');
+      setError(friendlyError(err, 'Salvataggio non riuscito. Riprova.'));
     } finally {
       setSaving(false);
     }
   };
 
-  if (loadingSettings) {
-    return <div className="text-white">Caricamento impostazioni...</div>;
-  }
-
   return (
-    <div className="bg-[#161D36] p-8 rounded-2xl border border-white/10 shadow-2xl w-full max-w-3xl">
-      <h3 className="text-2xl font-bold text-white mb-6 uppercase tracking-wider">
-        Impostazioni Sito (Footer)
-      </h3>
-      
-      {error && (
-        <div className="bg-red-500/20 border border-red-500 text-red-200 px-4 py-3 rounded mb-6">
-          {error}
+    <form onSubmit={handleSubmit} className="space-y-10 pb-28 md:pb-0">
+      <Section title="Contatti">
+        <div className="grid gap-6 sm:grid-cols-2">
+          <Field label="Telefono" htmlFor="s-phone" hint="Usato da tutti i pulsanti Chiama.">
+            <input id="s-phone" type="tel" value={form.phone} onChange={set('phone')} className={inputClass} />
+          </Field>
+          <Field label="WhatsApp" htmlFor="s-wa" optional hint="Se lo compili, nei contatti compare Scrivici su WhatsApp.">
+            <input id="s-wa" type="tel" value={form.whatsapp} onChange={set('whatsapp')} className={inputClass} placeholder="Es. 328 652 0798" />
+          </Field>
         </div>
-      )}
+        <Field label="Email" htmlFor="s-email">
+          <input id="s-email" type="email" value={form.email} onChange={set('email')} className={inputClass} autoCapitalize="none" />
+        </Field>
+        <Field label="Orari di apertura" htmlFor="s-hours" optional hint="Una riga per fascia. Es. Lun-Ven 7:00-22:00. Se vuoto, sul sito non compare.">
+          <textarea id="s-hours" value={form.opening_hours} onChange={set('opening_hours')} rows={4} className={inputClass} placeholder={'Lun-Ven 7:00-22:00\nSabato 9:00-13:00'} />
+        </Field>
+      </Section>
 
-      {success && (
-        <div className="bg-green-500/20 border border-green-500 text-green-200 px-4 py-3 rounded mb-6">
-          Impostazioni salvate con successo!
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-bold text-gray-400 mb-2">Telefono</label>
-            <input
-              type="text"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              className="w-full bg-[#0B0F24] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#F7E842] transition-colors"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-bold text-gray-400 mb-2">Email</label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              className="w-full bg-[#0B0F24] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#F7E842] transition-colors"
-            />
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-bold text-gray-400 mb-2">Indirizzo (usa &lt;br/&gt; per andare a capo)</label>
-          <textarea
-            name="address"
-            value={formData.address}
-            onChange={handleChange}
-            rows={3}
-            className="w-full bg-[#0B0F24] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#F7E842] transition-colors font-mono text-sm"
+      <Section title="Dove siamo">
+        <Field label="Indirizzo" htmlFor="s-address" hint="Come vuoi che appaia sul sito, una riga per volta.">
+          <textarea id="s-address" value={form.address} onChange={set('address')} rows={3} className={inputClass} />
+        </Field>
+        <Field label="Posizione sulla mappa" htmlFor="s-mapq" optional hint="Indirizzo da cercare su Google Maps, o coordinate (es. 40.6253, 16.7958). Se vuoto si usa l'indirizzo sopra.">
+          <input id="s-mapq" value={form.maps_query} onChange={set('maps_query')} className={inputClass} placeholder="Es. Via Industrie Conte, Laterza" />
+        </Field>
+        <div className="overflow-hidden rounded-[4px] border border-line">
+          <iframe
+            title="Anteprima mappa"
+            src={mapsEmbedUrl(mapQuery)}
+            loading="lazy"
+            className="block aspect-[16/9] w-full border-0 md:aspect-[21/9]"
           />
         </div>
+        <Field label="Link Indicazioni stradali" htmlFor="s-mapurl" optional hint="Da Google Maps: Condividi, Copia link. Se vuoto, il pulsante Indicazioni usa la posizione qui sopra.">
+          <input id="s-mapurl" type="url" value={form.google_maps_url} onChange={set('google_maps_url')} className={inputClass} placeholder="https://maps.app.goo.gl/…" />
+        </Field>
+      </Section>
 
-        <div className="grid grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-bold text-gray-400 mb-2">Link Instagram</label>
-            <input
-              type="text"
-              name="instagram_url"
-              value={formData.instagram_url}
-              onChange={handleChange}
-              className="w-full bg-[#0B0F24] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#F7E842] transition-colors"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-bold text-gray-400 mb-2">Link Facebook</label>
-            <input
-              type="text"
-              name="facebook_url"
-              value={formData.facebook_url}
-              onChange={handleChange}
-              className="w-full bg-[#0B0F24] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#F7E842] transition-colors"
-            />
-          </div>
+      <Section title="Social">
+        <div className="grid gap-6 sm:grid-cols-2">
+          <Field label="Instagram" htmlFor="s-ig" optional>
+            <input id="s-ig" type="url" value={form.instagram_url} onChange={set('instagram_url')} className={inputClass} placeholder="https://www.instagram.com/…" />
+          </Field>
+          <Field label="Facebook" htmlFor="s-fb" optional>
+            <input id="s-fb" type="url" value={form.facebook_url} onChange={set('facebook_url')} className={inputClass} placeholder="https://www.facebook.com/…" />
+          </Field>
         </div>
+      </Section>
 
-        <div>
-          <label className="block text-sm font-bold text-gray-400 mb-2">URL Google Maps (Condividi &gt; Copia Link)</label>
-          <input
-            type="text"
-            name="google_maps_url"
-            value={formData.google_maps_url}
-            onChange={handleChange}
-            className="w-full bg-[#0B0F24] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#F7E842] transition-colors"
-          />
-        </div>
+      <ErrorBox>{error}</ErrorBox>
 
-        <div className="flex justify-end pt-6 border-t border-white/10">
-          <button
-            type="submit"
-            disabled={saving}
-            className="px-8 py-3 rounded-lg font-bold bg-[#F7E842] text-[#161D36] hover:bg-white transition-colors disabled:opacity-50 flex items-center"
-          >
-            {saving ? 'Salvataggio...' : 'Salva Impostazioni'}
-          </button>
-        </div>
-      </form>
-    </div>
+      <div className="fixed inset-x-0 bottom-0 z-30 flex items-center gap-3 border-t border-line bg-ink px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] md:static md:border-0 md:bg-transparent md:p-0">
+        <a href="/" target="_blank" rel="noopener noreferrer" className="btn btn-ghost flex-1 md:flex-none">
+          <ExternalLink size={16} aria-hidden="true" /> Vedi sul sito
+        </a>
+        <Button type="submit" loading={saving} className="flex-[2] md:flex-none">{saving ? 'Salvataggio…' : 'Salva info'}</Button>
+      </div>
+    </form>
   );
 };

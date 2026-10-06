@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS public.courses (
     cloudinary_public_id text,
     order_index integer DEFAULT 0,
     is_active boolean DEFAULT true,
+    is_new boolean DEFAULT false,
     created_at timestamptz DEFAULT now(),
     updated_at timestamptz DEFAULT now()
 );
@@ -86,7 +87,10 @@ INSERT INTO public.site_settings (key, value) VALUES
 ('address', 'ForMe Laterza<br/>Via Industrie Conte<br/>74014 Laterza (Puglia)'),
 ('instagram_url', '#'),
 ('facebook_url', '#'),
-('google_maps_url', 'https://maps.app.goo.gl/3q4aM6FwRxKzLg7M8')
+('google_maps_url', 'https://maps.app.goo.gl/3q4aM6FwRxKzLg7M8'),
+('maps_query', 'Via Industrie Conte, Laterza'),
+('opening_hours', ''),
+('whatsapp', '')
 ON CONFLICT (key) DO NOTHING;
 
 -- Inserimento Corsi
@@ -112,3 +116,6 @@ INSERT INTO public.promotions (tag, title, subtitle, detail, price, old_price, v
 ('Flash Deal', 'Ingresso + Check InBody', 'Solo per nuovi iscritti', 'Valutazione completa della composizione corporea e piano iniziale personalizzato incluso.', '29€', '59€', '01/05', '31/05', 'from-[#F7E842] to-[#F3C318]', 'rgba(247,232,66,0.15)', 'Flame', 10),
 ('Pack Premium', '3 Mesi Unlimited', 'Accesso totale ai corsi', 'Accesso senza limiti, con onboarding dedicato.', '149€', '210€', '05/05', '30/06', 'from-[#5CE1E6] to-[#3DB8DE]', 'rgba(92,225,230,0.15)', 'Gift', 20),
 ('Bring a Friend', 'Allenati in Due', 'Promo coppia o amici', 'Sconto istantaneo sull''abbonamento mensile se vi iscrivete insieme nello stesso giorno.', '-20%', 'Promo limitata', '10/05', '09/06', 'from-[#C4FF36] to-[#8FEA19]', 'rgba(196,255,54,0.15)', 'Sparkles', 30);
+
+-- 4. Migrazione: badge "Nuovo" sui corsi (eseguire una volta nel SQL Editor di Supabase)
+ALTER TABLE public.courses ADD COLUMN IF NOT EXISTS is_new boolean DEFAULT false;

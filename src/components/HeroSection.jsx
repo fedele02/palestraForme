@@ -1,108 +1,93 @@
-import { motion, useScroll, useTransform } from 'framer-motion';
-import { useRef } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
+import { ArrowDown, Check, Phone } from 'lucide-react';
 
-export const HeroSection = () => {
-  const ref = useRef(null);
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start start", "end start"]
+// Foto stock segnaposto (Unsplash): da sostituire con una foto reale della palestra.
+// Stessa foto su telefono e desktop, cambia solo l'inquadratura.
+const HERO_IMAGE = 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&q=70';
+
+const POINTS = ['Allenamenti personalizzati', 'Personale qualificato', 'Ambiente motivante', 'Risultati visibili'];
+
+const EASE_OUT = [0.23, 1, 0.32, 1];
+
+const lines = [
+  { text: 'Non aspettare', accent: false },
+  { text: 'il cambiamento.', accent: false },
+  { text: 'Crealo.', accent: true },
+];
+
+export const HeroSection = ({ info }) => {
+  const reduceMotion = useReducedMotion();
+
+  const rise = (delay) => ({
+    initial: reduceMotion ? { opacity: 0 } : { opacity: 0, transform: 'translateY(12px)' },
+    animate: { opacity: 1, transform: 'translateY(0px)' },
+    transition: { duration: 0.7, delay, ease: EASE_OUT },
   });
-  const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
+
+  const scrollToCourses = (e) => {
+    e.preventDefault();
+    history.pushState(null, '', '/classes');
+    document.getElementById('corsi')?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' });
+  };
 
   return (
-    <section ref={ref} className="relative w-full min-h-[100dvh] flex items-center justify-center overflow-hidden bg-[#161D36] pt-24 pb-10 xl:pt-32 xl:pb-16">
-      {/* Immagine Background Intera Parallasse */}
-      <motion.div 
-        style={{ y: backgroundY }}
-        className="absolute inset-0 w-full h-[150%] -top-[10%] z-0"
-      >
-        <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2000&auto=format&fit=crop')" }}
-        />
-        {/* Overlay che fonde l'immagine nel colore del sito e aggiunge gradiente per staccare dal menu e far scomparire l'immagine in fondo*/}
-        <div className="absolute inset-0 bg-[#161D36]/80 mix-blend-multiply"></div>
-        <div className="absolute inset-0 bg-gradient-to-b from-[#161D36]/40 via-[#161D36]/70 to-[#101529]"></div>
-      </motion.div>
+    <section
+      aria-labelledby="hero-title"
+      className="relative isolate flex min-h-[100svh] flex-col justify-end overflow-hidden bg-ink"
+    >
+      <img
+        src={`${HERO_IMAGE}&w=1600`}
+        srcSet={`${HERO_IMAGE}&w=900 900w, ${HERO_IMAGE}&w=1200 1200w, ${HERO_IMAGE}&w=1600 1600w, ${HERO_IMAGE}&w=2400 2400w`}
+        sizes="100vw"
+        alt=""
+        fetchPriority="high"
+        decoding="async"
+        className="absolute inset-x-0 top-0 -z-20 h-[82%] w-full object-cover object-[60%_30%] [filter:grayscale(1)_contrast(1.05)] [mask-image:linear-gradient(to_bottom,black_72%,transparent)] md:inset-0 md:h-full md:object-[center_35%] md:[mask-image:none]"
+      />
+      {/* Velo per la leggibilità: dal basso su telefono, da sinistra su schermi larghi */}
+      <div aria-hidden="true" className="absolute inset-0 -z-10 bg-[linear-gradient(to_top,#161D36_8%,rgb(22_29_54/0.82)_45%,rgb(22_29_54/0.35)_100%)] md:bg-[linear-gradient(to_right,#161D36_0%,rgb(22_29_54/0.86)_38%,rgb(22_29_54/0.25)_75%),linear-gradient(to_top,#161D36_0%,transparent_30%)]" />
 
-      {/* Hero Content */}
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between">
-        
-        {/* Left Side: Text */}
-        <div className="w-full md:w-1/2 flex flex-col items-start justify-center text-left">
-          <motion.div
-            initial={{ opacity: 0, x: -50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="flex items-center space-x-4 mb-3 sm:mb-4"
-          >
-            <div className="w-12 h-1 bg-[#F7E842]"></div>
-            <p className="text-[#F7E842] font-bold tracking-[0.3em] uppercase text-[11px] sm:text-sm">Laterza, Italia</p>
-          </motion.div>
-
-          <motion.h1
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            className="text-[28px] min-[360px]:text-[32px] sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black text-white leading-[1.05] sm:leading-[1.1] uppercase tracking-wide sm:tracking-tighter"
-          >
-            <span className="block">Non aspettare</span>
-            <span className="block whitespace-normal sm:whitespace-nowrap">il cambiamento.</span>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#F7E842] to-[#FFF] italic block mt-0 sm:mt-1">
-              Crealo.
-            </span>
-          </motion.h1>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
-            className="mt-4 sm:mt-6 max-w-lg"
-          >
-            <p className="text-[#F7E842] font-bold text-lg sm:text-xl md:text-2xl tracking-[0.2em] mb-2 sm:mb-3">
-              <span className="uppercase">#4ME</span>dable
-            </p>
-            <div className="flex flex-col space-y-1 sm:space-y-1.5 border-l-2 border-[#F7E842]/50 pl-3 sm:pl-4 py-1">
-              <p className="text-gray-300 text-sm sm:text-base md:text-lg font-light leading-snug">Allenamenti personalizzati</p>
-              <p className="text-gray-300 text-sm sm:text-base md:text-lg font-light leading-snug">Personale qualificato</p>
-              <p className="text-gray-300 text-sm sm:text-base md:text-lg font-light leading-snug">Ambiente motivante</p>
-              <p className="text-gray-300 text-sm sm:text-base md:text-lg font-light leading-snug">Risultati visibili</p>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.8 }}
-            className="mt-6 sm:mt-8 flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-6 w-full sm:w-auto"
-          >
-            <a href="#corsi" className="relative uppercase font-bold tracking-widest bg-[#F7E842] text-[#161D36] px-6 py-3.5 sm:px-8 sm:py-4 rounded hover:bg-white transition-colors duration-300 shadow-[0_0_20px_rgba(247,232,66,0.3)] hover:shadow-[0_0_30px_rgba(247,232,66,0.6)] text-center w-full sm:w-auto text-[13px] sm:text-sm md:text-base">
-              Scopri i Corsi
-            </a>
-            <a href="#contatti" className="relative uppercase font-bold tracking-widest text-[#F7E842] border-2 border-[#F7E842] px-6 py-3.5 sm:px-8 sm:py-4 rounded hover:bg-[#F7E842] hover:text-[#161D36] transition-all duration-300 text-center w-full sm:w-auto text-[13px] sm:text-sm md:text-base">
-              Contattaci
-            </a>
-          </motion.div>
-        </div>
-
-        {/* Right Side: Abstract Geometry deleted and only text + lines visible on background image */}
-        <motion.div
-          className="hidden w-full md:w-1/2 md:flex justify-end mt-16 md:mt-0 relative"
-          initial={{ opacity: 0, x: 100 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 1, delay: 0.5 }}
+      <div className="mx-auto w-full max-w-7xl px-5 pb-[calc(2.75rem+env(safe-area-inset-bottom))] pt-32 sm:px-8 md:pb-20 lg:pb-24">
+        <h1
+          id="hero-title"
+          className="display text-[clamp(2.25rem,12.6vw,4.75rem)] text-paper [font-stretch:62%] md:text-[5.25rem] lg:text-[6rem]"
         >
-          {/* Sotto-cerchio pulsante per accentuare l'atmosfera */}
-          <motion.div
-            animate={{ 
-              scale: [1, 1.2, 1],
-              opacity: [0.1, 0.3, 0.1]
-            }}
-            transition={{ duration: 4, ease: 'easeInOut', repeat: Infinity }}
-            className="absolute top-1/2 right-20 transform -translate-y-1/2 w-64 h-64 bg-[#F7E842] rounded-full mix-blend-screen filter blur-[100px] pointer-events-none"
-          ></motion.div>
+          {lines.map((line, idx) => (
+            <span key={line.text} className="block overflow-hidden pb-[0.04em]">
+              <motion.span
+                className={`block ${line.accent ? 'text-sun' : ''}`}
+                initial={reduceMotion ? { opacity: 0 } : { transform: 'translateY(105%)' }}
+                animate={reduceMotion ? { opacity: 1 } : { transform: 'translateY(0%)' }}
+                transition={{ duration: 0.9, delay: 0.1 + idx * 0.08, ease: EASE_OUT }}
+              >
+                {line.text}
+              </motion.span>
+            </span>
+          ))}
+        </h1>
+
+        <motion.div {...rise(0.45)} className="mt-5 md:mt-7">
+          <p className="text-xl font-bold tracking-[0.02em] text-sun md:text-2xl">#4MEdable</p>
+          <ul className="mt-4 grid max-w-md grid-cols-2 gap-x-5 gap-y-2.5 md:mt-5">
+            {POINTS.map((point) => (
+              <li key={point} className="flex items-start gap-2 text-[0.9375rem] font-medium leading-snug text-paper/90 md:text-base">
+                <Check size={16} strokeWidth={2.5} className="mt-[0.2em] shrink-0 text-sun" aria-hidden="true" />
+                {point}
+              </li>
+            ))}
+          </ul>
         </motion.div>
 
+        <motion.div {...rise(0.55)} className="mt-7 flex flex-wrap gap-3 md:mt-9">
+          <a href="/classes" onClick={scrollToCourses} className="btn btn-sun flex-1 sm:flex-none">
+            Scopri i corsi
+            <ArrowDown size={18} strokeWidth={2} aria-hidden="true" />
+          </a>
+          <a href={info.phoneHref} className="btn btn-ghost flex-1 sm:flex-none">
+            <Phone size={18} strokeWidth={1.75} aria-hidden="true" />
+            Chiama
+          </a>
+        </motion.div>
       </div>
     </section>
   );

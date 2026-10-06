@@ -1,12 +1,173 @@
 @import "tailwindcss";
 
 @theme {
+  --color-ink: #161D36;
+  --color-ink-deep: #10162B;
+  --color-ink-raised: #1D2544;
+  --color-line: rgb(214 220 240 / 0.14);
+  --color-paper: #F2F3F7;
+  --color-mute: #A9B0C7;
+  --color-sun: #F7E842;
+  --color-sun-press: #E6D72F;
+
+  /* alias storici usati dall'area admin */
   --color-brand-blue: #161D36;
   --color-brand-yellow: #F7E842;
   --color-brand-white: #FFFFFF;
-  --font-sans: 'Montserrat', sans-serif;
+
+  --font-sans: 'Archivo Variable', 'Archivo', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out-strong: cubic-bezier(0.77, 0, 0.175, 1);
 }
 
-html, body {
-  @apply bg-brand-blue text-brand-white antialiased overflow-x-hidden;
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+    scroll-padding-top: 4.5rem;
+    background: var(--color-ink);
+    color: var(--color-paper);
+    color-scheme: dark;
+    scrollbar-color: rgb(214 220 240 / 0.28) var(--color-ink-deep);
+  }
+
+  body {
+    @apply font-sans antialiased;
+    background: var(--color-ink);
+    overflow-x: clip;
+    font-stretch: 100%;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: var(--color-sun);
+    color: var(--color-ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-sun);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  a, button, [role="button"] {
+    touch-action: manipulation;
+  }
+
+  button, [role="button"], .no-select {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  input, textarea, select {
+    font-size: 16px;
+  }
+
+  h1, h2, h3 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+  }
+}
+
+@layer components {
+  /* Voce display: Archivo condensato, nero, maiuscolo */
+  .display {
+    font-stretch: 68%;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+    line-height: 0.92;
+  }
+
+  /* Bottoni: angoli 4px su tutto il sito, feedback alla pressione */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.625rem;
+    min-height: 3.25rem;
+    padding: 0 1.5rem;
+    border-radius: 4px;
+    font-weight: 700;
+    font-size: 0.9375rem;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+    transition: transform 140ms var(--ease-out-strong), background-color 180ms ease, color 180ms ease, border-color 180ms ease;
+  }
+  .btn:active {
+    transform: scale(0.97);
+  }
+  .btn-sun {
+    background: var(--color-sun);
+    color: var(--color-ink);
+  }
+  .btn-sun:active {
+    background: var(--color-sun-press);
+  }
+  .btn-ghost {
+    color: var(--color-paper);
+    border: 1px solid rgb(242 243 247 / 0.32);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .btn-sun:hover { background: #FFF27A; }
+    .btn-ghost:hover { border-color: var(--color-paper); background: rgb(242 243 247 / 0.06); }
+  }
+
+  .link-underline {
+    text-decoration-line: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.3em;
+    text-decoration-color: rgb(242 243 247 / 0.35);
+    transition: text-decoration-color 180ms ease;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .link-underline:hover { text-decoration-color: var(--color-sun); }
+  }
+
+  /* Foto dei corsi: sfumano da sfocate a nitide quando sono state scaricate */
+  .course-photo {
+    opacity: 0;
+    transform: scale(1.03);
+    filter: grayscale(1) contrast(1.08) brightness(0.9) blur(8px);
+    transition:
+      opacity 600ms var(--ease-out-strong),
+      transform 900ms var(--ease-out-strong),
+      filter 600ms var(--ease-out-strong);
+  }
+  .course-photo[data-loaded] {
+    opacity: 1;
+    transform: scale(1);
+    filter: grayscale(1) contrast(1.08) brightness(0.9) blur(0px);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .course-photo {
+      transform: none;
+      filter: grayscale(1) contrast(1.08) brightness(0.9);
+      transition: opacity 300ms ease;
+    }
+  }
+
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.97); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  @keyframes toast-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
 }
