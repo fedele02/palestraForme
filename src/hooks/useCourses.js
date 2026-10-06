@@ -1,7 +1,7 @@
 import { useTable } from './useTable';
 
 export const useCourses = () => {
-  const { rows, loading, error, refetch, create, update, remove, move, nextOrderIndex } = useTable('courses');
+  const { rows, loading, error, refetch, create, update, remove, move, swap, nextOrderIndex } = useTable('courses');
   return {
     courses: rows,
     loading,
@@ -11,6 +11,7 @@ export const useCourses = () => {
     updateCourse: update,
     deleteCourse: remove,
     moveCourse: move,
+    swapCourses: swap,
     nextOrderIndex,
   };
 };

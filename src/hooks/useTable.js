@@ -108,7 +108,30 @@ export const useTable = (table) => {
     }
   };
 
+  // Scambia la posizione di due elementi (es. due corsi della stessa sezione)
+  const swap = async (idA, idB) => {
+    const a = rows.find((r) => r.id === idA);
+    const b = rows.find((r) => r.id === idB);
+    if (!a || !b) return;
+    let oa = a.order_index ?? 0;
+    let ob = b.order_index ?? 0;
+    if (oa === ob) ob = oa + 1;
+    setRows((prev) => prev.map((r) => (r.id === idA ? { ...r, order_index: ob } : r.id === idB ? { ...r, order_index: oa } : r)).sort(byOrder));
+    try {
+      for (const [id, order_index] of [[idA, ob], [idB, oa]]) {
+        if (devMode) await (await loadDev(table)).update(id, { order_index });
+        else {
+          const { error: err } = await supabase.from(table).update({ order_index }).eq('id', id);
+          if (err) throw err;
+        }
+      }
+    } catch (err) {
+      await refetch();
+      throw err;
+    }
+  };
+
   const nextOrderIndex = () => (rows.length ? Math.max(...rows.map((r) => r.order_index ?? 0)) + 10 : 10);
 
-  return { rows, loading, error, refetch, create, update, remove, move, nextOrderIndex };
+  return { rows, loading, error, refetch, create, update, remove, move, swap, nextOrderIndex };
 };

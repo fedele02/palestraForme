@@ -56,9 +56,25 @@ export const prepareCourses = (courses) => {
   });
 };
 
-// Raggruppa per famiglia (ordine fisso di FAMILY_LABEL); dentro ogni famiglia
-// resta l'ordine dell'admin, ma i corsi nuovi vengono per primi.
-export const groupByFamily = (courses) => {
+const newFirst = (list) => [...list.filter((c) => c.is_new), ...list.filter((c) => !c.is_new)];
+
+export const UNASSIGNED_ID = 'altri';
+
+// Raggruppa i corsi per sezione. Le sezioni (nome e ordine) arrivano dall'area admin
+// (tabella course_families); i corsi senza sezione finiscono in fondo in "Altri corsi".
+// Solo se le sezioni non esistono ancora nel database si usa il raggruppamento automatico per nome.
+export const groupByFamily = (courses, families = []) => {
+  if (families.length) {
+    const sorted = [...families].sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
+    const known = new Set(sorted.map((f) => f.id));
+    const groups = sorted
+      .map((f) => ({ id: f.id, label: f.name, courses: newFirst(courses.filter((c) => c.family_id === f.id)) }))
+      .filter((g) => g.courses.length > 0);
+    const rest = courses.filter((c) => !known.has(c.family_id));
+    if (rest.length) groups.push({ id: UNASSIGNED_ID, label: 'Altri corsi', courses: newFirst(rest) });
+    return groups;
+  }
+
   const groups = [];
   courses.forEach((course) => {
     let group = groups.find((g) => g.id === course.family);
@@ -68,9 +84,7 @@ export const groupByFamily = (courses) => {
     }
     group.courses.push(course);
   });
-  groups.forEach((g) => {
-    g.courses = [...g.courses.filter((c) => c.is_new), ...g.courses.filter((c) => !c.is_new)];
-  });
+  groups.forEach((g) => { g.courses = newFirst(g.courses); });
   const order = Object.keys(FAMILY_LABEL);
   return groups.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
 };

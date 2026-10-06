@@ -6,12 +6,13 @@ import { Button, ErrorBox, Field, Toggle, inputClass } from './ui';
 
 const empty = { title: '', description: '', schedule: '', is_active: true, is_new: false, image_url: null, cloudinary_public_id: null };
 
-export const CourseForm = ({ initialData, onSubmit, onCancel, supportsNewFlag = false }) => {
+export const CourseForm = ({ initialData, onSubmit, onCancel, supportsNewFlag = false, families = [], defaultFamilyId = '' }) => {
   const [form, setForm] = useState(() => ({
     ...empty,
     ...(initialData || {}),
     schedule: initialData?.schedule && initialData.schedule !== 'Orari da definire' ? initialData.schedule : '',
     is_new: !!initialData?.is_new,
+    family_id: initialData?.family_id && families.some((f) => f.id === initialData.family_id) ? initialData.family_id : defaultFamilyId,
   }));
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(initialData?.image_url || null);
@@ -38,6 +39,7 @@ export const CourseForm = ({ initialData, onSubmit, onCancel, supportsNewFlag = 
     setError('');
     if (!form.title.trim()) return setError('Scrivi il nome del corso.');
     if (!form.description.trim()) return setError('Scrivi una breve descrizione del corso.');
+    if (families.length && !form.family_id) return setError('Scegli in quale sezione del sito mostrare il corso.');
     setSaving(true);
     try {
       let { image_url, cloudinary_public_id } = form;
@@ -55,6 +57,8 @@ export const CourseForm = ({ initialData, onSubmit, onCancel, supportsNewFlag = 
         cloudinary_public_id,
         // is_new va inviato solo se la colonna esiste già nel database (vedi supabase.sql)
         ...(supportsNewFlag ? { is_new: form.is_new } : {}),
+        // family_id esiste solo dopo la migrazione delle sezioni (vedi supabase.sql)
+        ...(families.length ? { family_id: form.family_id || null } : {}),
       };
       await onSubmit(data);
     } catch (err) {
@@ -75,6 +79,14 @@ export const CourseForm = ({ initialData, onSubmit, onCancel, supportsNewFlag = 
           <Field label="Nome del corso" htmlFor="c-title" hint="Viene mostrato in maiuscolo sul sito.">
             <input id="c-title" value={form.title} onChange={set('title')} className={inputClass} placeholder="Es. PILATES" autoComplete="off" />
           </Field>
+          {families.length > 0 && (
+            <Field label="Sezione" htmlFor="c-family" hint="Sotto quale titolo compare sul sito (Fitness, Danza...). Le sezioni si gestiscono nella pagina Corsi.">
+              <select id="c-family" value={form.family_id} onChange={set('family_id')} className={`${inputClass} [color-scheme:dark]`}>
+                <option value="">Scegli una sezione</option>
+                {families.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
+              </select>
+            </Field>
+          )}
           <Field label="Descrizione" htmlFor="c-desc" hint="Due o tre frasi: cosa si fa e per chi è adatto.">
             <textarea id="c-desc" value={form.description} onChange={set('description')} rows={5} className={inputClass} />
           </Field>

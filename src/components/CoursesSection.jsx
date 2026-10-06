@@ -3,6 +3,7 @@ import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion
 import { Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCourses } from '../hooks/useCourses';
+import { useFamilies } from '../hooks/useFamilies';
 import { EditButton } from './admin/EditButton';
 import { ScrollPulse } from './ScrollPulse';
 import { courseImage, coursePlaceholder, groupByFamily, hasSchedule, prepareCourses } from '../lib/courses';
@@ -143,7 +144,9 @@ const CoursesSkeleton = () => (
 );
 
 export const CoursesSection = ({ info }) => {
-  const { courses, loading, error } = useCourses();
+  const { courses, loading: coursesLoading, error } = useCourses();
+  const { families, loading: familiesLoading } = useFamilies();
+  const loading = coursesLoading || familiesLoading;
   const navigate = useNavigate();
   const sectionRef = useRef(null);
   const reduceMotion = useReducedMotion();
@@ -153,7 +156,7 @@ export const CoursesSection = ({ info }) => {
   const titleOpacity = useTransform(scrollYProgress, [0.3, 1], [0.15, 1]);
   const titleY = useTransform(scrollYProgress, [0.3, 1], reduceMotion ? [0, 0] : [28, 0]);
   const activeCourses = prepareCourses(courses.filter((c) => c.is_active));
-  const groups = groupByFamily(activeCourses);
+  const groups = groupByFamily(activeCourses, families);
 
   const jumpTo = (e, id) => {
     e.preventDefault();

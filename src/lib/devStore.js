@@ -1,11 +1,12 @@
 // SOLO SVILUPPO LOCALE: piccolo "database" nel browser (localStorage) che imita Supabase,
 // così sito e area admin si possono provare senza un progetto Supabase attivo.
 // In produzione non viene mai caricato (gli hook lo importano solo con import.meta.env.DEV).
-import { devCourses, devPromotions, devSettings } from './devData';
+import { devCourses, devFamilies, devPromotions, devSettings } from './devData';
 
-const KEY = 'forme-dev-db-v1';
+const KEY = 'forme-dev-db-v2';
 
 const seed = () => ({
+  course_families: devFamilies.map((f) => ({ ...f })),
   courses: devCourses.map((c) => ({ ...c })),
   promotions: devPromotions.map((p) => ({ ...p })),
   site_settings: { ...devSettings },

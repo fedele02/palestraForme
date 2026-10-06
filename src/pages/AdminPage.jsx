@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronUp, ExternalLink, Eye, EyeOff, LogOut, Pencil, Plus } from 'lucide-react';
+import { Check, ChevronDown, ChevronUp, ExternalLink, Eye, EyeOff, LogOut, Pencil, Plus } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useCourses } from '../hooks/useCourses';
+import { useFamilies } from '../hooks/useFamilies';
 import { usePromotions } from '../hooks/usePromotions';
 import { friendlyError } from '../hooks/useTable';
 import { CourseForm } from '../components/admin/CourseForm';
@@ -98,10 +99,103 @@ const Empty = ({ children }) => (
   <p className="rounded-[4px] border border-dashed border-line px-4 py-10 text-center text-mute">{children}</p>
 );
 
+/* ---------- Sezioni dei corsi ---------- */
+
+const FamiliesPanel = ({ families, courseCount, api, run }) => {
+  const [adding, setAdding] = useState('');
+  const [editingId, setEditingId] = useState(null);
+  const [draft, setDraft] = useState('');
+
+  const add = async (e) => {
+    e.preventDefault();
+    const name = adding.trim();
+    if (!name) return;
+    await run(() => api.createFamily({ name, order_index: api.nextOrderIndex() }), `Sezione "${name}" aggiunta`);
+    setAdding('');
+  };
+
+  const saveName = async (f) => {
+    const name = draft.trim();
+    setEditingId(null);
+    if (!name || name === f.name) return;
+    await run(() => api.updateFamily(f.id, { name }), 'Sezione rinominata');
+  };
+
+  const startEdit = (f) => {
+    setEditingId(f.id);
+    setDraft(f.name);
+  };
+
+  return (
+    <section className="mb-12 rounded-[4px] border border-line bg-ink-deep p-4 sm:p-5">
+      <h3 className="display text-[1.75rem] text-sun">Sezioni</h3>
+      <p className="mt-1 text-sm text-mute">
+        I titoli sotto cui sono raggruppati i corsi sul sito, in questo ordine. Con la matita cambi il nome.
+      </p>
+      <ul className="mt-4 border-t border-line">
+        {families.map((f, i) => (
+          <li key={f.id} className="border-b border-line py-2">
+            {editingId === f.id ? (
+              // Modifica del nome: campo + Salva / Annulla ben visibili
+              <form
+                onSubmit={(e) => { e.preventDefault(); saveName(f); }}
+                className="flex flex-wrap items-center gap-2 py-1"
+              >
+                <label htmlFor={`fam-${f.id}`} className="sr-only">Nuovo nome per {f.name}</label>
+                <input
+                  id={`fam-${f.id}`}
+                  autoFocus
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Escape') setEditingId(null); }}
+                  className={`${inputClass} min-w-0 flex-1 basis-48 py-2.5`}
+                />
+                <div className="flex gap-2">
+                  <Button type="button" variant="ghost" onClick={() => setEditingId(null)} className="min-h-11 px-4">Annulla</Button>
+                  <Button type="submit" className="min-h-11 px-4"><Check size={18} aria-hidden="true" /> Salva</Button>
+                </div>
+              </form>
+            ) : (
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => startEdit(f)}
+                  className="min-h-10 min-w-0 flex-1 text-left"
+                  aria-label={`Rinomina ${f.name}`}
+                >
+                  <span className="block font-semibold leading-snug text-paper">{f.name}</span>
+                  <span className="block text-sm text-mute">{courseCount(f.id) === 1 ? '1 corso' : `${courseCount(f.id)} corsi`}</span>
+                </button>
+                <IconButton label={`Rinomina ${f.name}`} onClick={() => startEdit(f)}><Pencil size={18} strokeWidth={1.75} aria-hidden="true" /></IconButton>
+                <IconButton label="Sposta su" onClick={() => run(() => api.moveFamily(f.id, -1))} disabled={i === 0}><ChevronUp size={20} aria-hidden="true" /></IconButton>
+                <IconButton label="Sposta giù" onClick={() => run(() => api.moveFamily(f.id, 1))} disabled={i === families.length - 1}><ChevronDown size={20} aria-hidden="true" /></IconButton>
+                <DeleteButton
+                  label={`Elimina la sezione ${f.name}`}
+                  onConfirm={() => run(
+                    () => api.deleteFamily(f.id),
+                    courseCount(f.id) ? 'Sezione eliminata: i suoi corsi ora sono senza sezione' : 'Sezione eliminata'
+                  )}
+                />
+              </div>
+            )}
+          </li>
+        ))}
+      </ul>
+      <form onSubmit={add} className="mt-4 flex gap-2">
+        <label htmlFor="new-family" className="sr-only">Nome della nuova sezione</label>
+        <input id="new-family" value={adding} onChange={(e) => setAdding(e.target.value)} placeholder="Nuova sezione, es. Bambini" className={`${inputClass} py-2.5`} />
+        <Button type="submit" className="min-h-11 shrink-0 px-4"><Plus size={18} aria-hidden="true" /> Aggiungi</Button>
+      </form>
+    </section>
+  );
+};
+
 /* ---------- Corsi ---------- */
 
 const CoursesAdmin = ({ toast }) => {
-  const { courses, loading, error, createCourse, updateCourse, deleteCourse, moveCourse, nextOrderIndex } = useCourses();
+  const { courses, loading, error, createCourse, updateCourse, deleteCourse, swapCourses, nextOrderIndex } = useCourses();
+  const familiesApi = useFamilies();
+  const { families, loading: familiesLoading } = familiesApi;
   const [editing, setEditing] = useState(null);
   const run = async (fn, okMessage) => {
     try { await fn(); if (okMessage) toast.show(okMessage); }
@@ -112,6 +206,8 @@ const CoursesAdmin = ({ toast }) => {
     return (
       <CourseForm
         initialData={editing.id ? editing : null}
+        families={families}
+        defaultFamilyId={editing.defaultFamilyId || ''}
         supportsNewFlag={courses.length === 0 || courses.some((c) => 'is_new' in c)}
         onCancel={() => setEditing(null)}
         onSubmit={async (data) => {
@@ -124,37 +220,75 @@ const CoursesAdmin = ({ toast }) => {
     );
   }
 
-  const withImages = prepareCourses(courses);
+  // Stessa suddivisione del sito: una sezione dopo l'altra, poi i corsi senza sezione
+  const prepared = prepareCourses(courses);
+  const known = new Set(families.map((f) => f.id));
+  const sections = families.map((f) => ({ id: f.id, label: f.name, courses: prepared.filter((c) => c.family_id === f.id) }));
+  const orphans = prepared.filter((c) => !known.has(c.family_id));
+  if (orphans.length) {
+    sections.push({ id: 'none', label: families.length ? 'Senza sezione' : 'Tutti i corsi', courses: orphans, orphan: families.length > 0 });
+  }
+  const courseCount = (familyId) => courses.filter((c) => c.family_id === familyId).length;
+
   return (
     <>
-      <ListHeader title="Corsi" loading={loading} count={courses.length} onAdd={() => setEditing({})} addLabel="Nuovo corso" note="L'ordine qui è l'ordine sul sito, dentro ogni famiglia." />
+      <ListHeader title="Corsi" loading={loading} count={courses.length} onAdd={() => setEditing({})} addLabel="Nuovo corso" note="Divisi per sezione, come sul sito." />
       <ErrorBox>{error && friendlyError({ message: error }, 'Impossibile caricare i corsi.')}</ErrorBox>
-      {loading ? <p className="py-10 text-mute">Caricamento…</p> : courses.length === 0 ? (
-        <Empty>Nessun corso ancora. Aggiungi il primo con Nuovo corso.</Empty>
-      ) : (
-        <ul className="border-t border-line">
-          {withImages.map((c, i) => (
-            <ListRow
-              key={c.id}
-              thumb={<img src={courseImage(c, 160)} alt="" className="h-12 w-16 shrink-0 rounded-[4px] bg-ink-raised object-cover [filter:grayscale(1)]" />}
-              title={c.title}
-              meta={c.schedule && c.schedule !== 'Orari da definire' ? c.schedule : 'Orari non indicati'}
-              badges={<>
-                {!c.is_active && <StatusBadge tone="off">Nascosto</StatusBadge>}
-                {c.is_new && <StatusBadge tone="sun">Nuovo</StatusBadge>}
-                {!c.image_url && <StatusBadge tone="warn">Senza foto</StatusBadge>}
-              </>}
-              visible={c.is_active}
-              isFirst={i === 0}
-              isLast={i === withImages.length - 1}
-              onUp={() => run(() => moveCourse(c.id, -1))}
-              onDown={() => run(() => moveCourse(c.id, 1))}
-              onToggle={() => run(() => updateCourse(c.id, { is_active: !c.is_active }), c.is_active ? 'Corso nascosto' : 'Corso visibile')}
-              onEdit={() => setEditing(c)}
-              onDelete={() => run(() => deleteCourse(c.id), 'Corso eliminato')}
-            />
-          ))}
-        </ul>
+      {loading || familiesLoading ? <p className="py-10 text-mute">Caricamento…</p> : (
+        <>
+          <FamiliesPanel families={families} courseCount={courseCount} api={familiesApi} run={run} />
+
+          {courses.length === 0 && <Empty>Nessun corso ancora. Aggiungi il primo con Nuovo corso.</Empty>}
+
+          <div className="space-y-10">
+            {sections.map((section) => (
+              <section key={section.id}>
+                <div className="mb-2 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                  <h3 className={`display text-[1.75rem] ${section.orphan ? 'text-amber-300' : 'text-paper'}`}>
+                    {section.label}
+                    <span className="ml-2 font-sans text-sm font-semibold normal-case tracking-normal text-mute">{section.courses.length}</span>
+                  </h3>
+                  {section.id !== 'none' && (
+                    <button type="button" onClick={() => setEditing({ defaultFamilyId: section.id })} className="inline-flex min-h-10 items-center gap-1.5 text-sm font-semibold text-sun">
+                      <Plus size={16} aria-hidden="true" /> Aggiungi corso qui
+                    </button>
+                  )}
+                </div>
+                {section.orphan && (
+                  <p className="mb-2 text-sm text-amber-300">Sul sito questi corsi finiscono in fondo, sotto Altri corsi. Aprili e scegli una sezione.</p>
+                )}
+                {section.courses.length === 0 ? (
+                  <p className="border-t border-line py-4 text-sm text-mute">Nessun corso in questa sezione: sul sito non compare finché non ne aggiungi uno.</p>
+                ) : (
+                  <ul className="border-t border-line">
+                    {section.courses.map((c, i) => (
+                      <ListRow
+                        key={c.id}
+                        thumb={<img src={courseImage(c, 160)} alt="" className="h-12 w-16 shrink-0 rounded-[4px] bg-ink-raised object-cover [filter:grayscale(1)]" />}
+                        title={c.title}
+                        meta={c.schedule && c.schedule !== 'Orari da definire' ? c.schedule : 'Orari non indicati'}
+                        badges={<>
+                          {!c.is_active && <StatusBadge tone="off">Nascosto</StatusBadge>}
+                          {c.is_new && <StatusBadge tone="sun">Nuovo</StatusBadge>}
+                          {!c.image_url && <StatusBadge tone="warn">Senza foto</StatusBadge>}
+                        </>}
+                        visible={c.is_active}
+                        isFirst={i === 0}
+                        isLast={i === section.courses.length - 1}
+                        onUp={() => run(() => swapCourses(c.id, section.courses[i - 1].id))}
+                        onDown={() => run(() => swapCourses(c.id, section.courses[i + 1].id))}
+                        onToggle={() => run(() => updateCourse(c.id, { is_active: !c.is_active }), c.is_active ? 'Corso nascosto' : 'Corso visibile')}
+                        onEdit={() => setEditing(c)}
+                        onDelete={() => run(() => deleteCourse(c.id), 'Corso eliminato')}
+                      />
+                    ))}
+                  </ul>
+                )}
+              </section>
+            ))}
+          </div>
+          <p className="mt-6 text-sm text-mute">Sul sito i corsi segnati come Nuovo compaiono per primi nella loro sezione.</p>
+        </>
       )}
     </>
   );

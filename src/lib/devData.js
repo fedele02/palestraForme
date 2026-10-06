@@ -1,6 +1,34 @@
 // Dati SOLO per l'anteprima locale (npm run dev) quando Supabase non è configurato.
 // Fonte: supabase.sql. Le promozioni sono i dati demo del seed, non offerte reali.
 // Il corso marcato is_new e le date delle promo (spostate in avanti) servono solo all'anteprima.
+export const devFamilies = [
+  {
+    "id": "fam-fitness",
+    "name": "Fitness",
+    "order_index": 10
+  },
+  {
+    "id": "fam-danza",
+    "name": "Danza",
+    "order_index": 20
+  },
+  {
+    "id": "fam-aeree",
+    "name": "Discipline aeree",
+    "order_index": 30
+  },
+  {
+    "id": "fam-marziali",
+    "name": "Arti marziali",
+    "order_index": 40
+  },
+  {
+    "id": "fam-benessere",
+    "name": "Benessere",
+    "order_index": 50
+  }
+];
+
 export const devCourses = [
   {
     "id": "dev-course-1",
@@ -10,7 +38,8 @@ export const devCourses = [
     "image_url": null,
     "order_index": 10,
     "is_active": true,
-    "is_new": false
+    "is_new": false,
+    "family_id": "fam-aeree"
   },
   {
     "id": "dev-course-2",
@@ -20,7 +49,8 @@ export const devCourses = [
     "image_url": null,
     "order_index": 20,
     "is_active": true,
-    "is_new": false
+    "is_new": false,
+    "family_id": "fam-benessere"
   },
   {
     "id": "dev-course-3",
@@ -30,7 +60,8 @@ export const devCourses = [
     "image_url": null,
     "order_index": 30,
     "is_active": true,
-    "is_new": false
+    "is_new": false,
+    "family_id": "fam-fitness"
   },
   {
     "id": "dev-course-4",
@@ -40,7 +71,8 @@ export const devCourses = [
     "image_url": null,
     "order_index": 40,
     "is_active": true,
-    "is_new": false
+    "is_new": false,
+    "family_id": "fam-fitness"
   },
   {
     "id": "dev-course-5",
@@ -50,7 +82,8 @@ export const devCourses = [
     "image_url": null,
     "order_index": 50,
     "is_active": true,
-    "is_new": false
+    "is_new": false,
+    "family_id": "fam-fitness"
   },
   {
     "id": "dev-course-6",
@@ -60,7 +93,8 @@ export const devCourses = [
     "image_url": null,
     "order_index": 60,
     "is_active": true,
-    "is_new": false
+    "is_new": false,
+    "family_id": "fam-fitness"
   },
   {
     "id": "dev-course-7",
@@ -70,7 +104,8 @@ export const devCourses = [
     "image_url": null,
     "order_index": 70,
     "is_active": true,
-    "is_new": false
+    "is_new": false,
+    "family_id": "fam-marziali"
   },
   {
     "id": "dev-course-8",
@@ -80,7 +115,8 @@ export const devCourses = [
     "image_url": null,
     "order_index": 80,
     "is_active": true,
-    "is_new": false
+    "is_new": false,
+    "family_id": "fam-danza"
   },
   {
     "id": "dev-course-9",
@@ -90,7 +126,8 @@ export const devCourses = [
     "image_url": null,
     "order_index": 90,
     "is_active": true,
-    "is_new": false
+    "is_new": false,
+    "family_id": "fam-danza"
   },
   {
     "id": "dev-course-10",
@@ -100,7 +137,8 @@ export const devCourses = [
     "image_url": null,
     "order_index": 100,
     "is_active": true,
-    "is_new": true
+    "is_new": true,
+    "family_id": "fam-aeree"
   },
   {
     "id": "dev-course-11",
@@ -110,7 +148,8 @@ export const devCourses = [
     "image_url": null,
     "order_index": 110,
     "is_active": true,
-    "is_new": false
+    "is_new": false,
+    "family_id": "fam-benessere"
   },
   {
     "id": "dev-course-12",
@@ -120,7 +159,8 @@ export const devCourses = [
     "image_url": null,
     "order_index": 120,
     "is_active": true,
-    "is_new": false
+    "is_new": false,
+    "family_id": "fam-benessere"
   },
   {
     "id": "dev-course-13",
@@ -130,7 +170,8 @@ export const devCourses = [
     "image_url": null,
     "order_index": 130,
     "is_active": true,
-    "is_new": false
+    "is_new": false,
+    "family_id": "fam-marziali"
   },
   {
     "id": "dev-course-14",
@@ -140,7 +181,8 @@ export const devCourses = [
     "image_url": null,
     "order_index": 140,
     "is_active": true,
-    "is_new": false
+    "is_new": false,
+    "family_id": "fam-marziali"
   }
 ];
 

@@ -119,3 +119,41 @@ INSERT INTO public.promotions (tag, title, subtitle, detail, price, old_price, v
 
 -- 4. Migrazione: badge "Nuovo" sui corsi (eseguire una volta nel SQL Editor di Supabase)
 ALTER TABLE public.courses ADD COLUMN IF NOT EXISTS is_new boolean DEFAULT false;
+
+-- 5. Sezioni dei corsi (Fitness, Danza, ...) gestite dall'area admin
+CREATE TABLE IF NOT EXISTS public.course_families (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    name text NOT NULL,
+    order_index integer DEFAULT 0,
+    created_at timestamptz DEFAULT now(),
+    updated_at timestamptz DEFAULT now()
+);
+
+ALTER TABLE public.course_families ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Sezioni visibili a tutti"
+ON public.course_families FOR SELECT
+USING (true);
+
+CREATE POLICY "Solo admin può modificare le sezioni"
+ON public.course_families FOR ALL
+USING (auth.role() = 'authenticated');
+
+-- Ogni corso appartiene a una sezione; se la sezione viene eliminata il corso resta, senza sezione
+ALTER TABLE public.courses ADD COLUMN IF NOT EXISTS family_id uuid REFERENCES public.course_families(id) ON DELETE SET NULL;
+
+-- Sezioni iniziali e assegnazione dei corsi esistenti (eseguire una sola volta)
+INSERT INTO public.course_families (name, order_index)
+SELECT v.name, v.ord FROM (VALUES
+    ('Fitness', 10), ('Danza', 20), ('Discipline aeree', 30), ('Arti marziali', 40), ('Benessere', 50)
+) AS v(name, ord)
+WHERE NOT EXISTS (SELECT 1 FROM public.course_families);
+
+UPDATE public.courses c SET family_id = f.id FROM public.course_families f
+WHERE c.family_id IS NULL AND f.name = CASE
+    WHEN c.title ~* 'karate|box|kombat|kick' THEN 'Arti marziali'
+    WHEN c.title ~* 'aere|bungee' THEN 'Discipline aeree'
+    WHEN c.title ~* 'ball|enjoy' THEN 'Danza'
+    WHEN c.title ~* 'pilates|postural|zen' THEN 'Benessere'
+    ELSE 'Fitness'
+END;
