@@ -16,8 +16,8 @@ export const Navbar = ({ hasOffers = false, info }) => {
   const { scrollY } = useScroll();
 
   const navLinks = [
-    { name: 'Corsi', sectionId: 'corsi', path: '/classes' },
     ...(hasOffers ? [{ name: 'Offerte', sectionId: 'offerte', path: '/offers' }] : []),
+    { name: 'Corsi', sectionId: 'corsi', path: '/classes' },
     { name: 'Contatti', sectionId: 'contatti', path: '/contacts' },
   ];
 
@@ -31,7 +31,7 @@ export const Navbar = ({ hasOffers = false, info }) => {
 
   // Scroll spy: la sezione che occupa la fascia centrale dello schermo è quella attiva
   useEffect(() => {
-    const ids = ['corsi', 'offerte', 'contatti'];
+    const ids = ['offerte', 'corsi', 'contatti'];
     const visible = new Map();
     const io = new IntersectionObserver(
       (entries) => {

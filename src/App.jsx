@@ -26,14 +26,15 @@ function MainSite() {
 	return (
 		<MotionConfig reducedMotion="user">
 			<div className="min-h-[100svh] w-full bg-ink font-sans text-paper">
-				<a href="#corsi" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-[4px] focus:bg-sun focus:px-4 focus:py-3 focus:font-semibold focus:text-ink">
+				<a href={hasOffers ? '#offerte' : '#corsi'} className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-[4px] focus:bg-sun focus:px-4 focus:py-3 focus:font-semibold focus:text-ink">
 					Vai ai contenuti
 				</a>
 				<Navbar hasOffers={hasOffers} info={info} />
 				<main>
 					<HeroSection info={info} />
-					<CoursesSection info={info} />
 					{hasOffers && <OffersBoardSection promotions={visiblePromotions} info={info} />}
+					{/* La linea del battito solo sotto la Home: tra Offerte e Corsi niente */}
+					<CoursesSection info={info} showPulse={!hasOffers} />
 				</main>
 				<ContactFooter info={info} />
 				<MobileCallBar info={info} />

@@ -45,8 +45,8 @@ const OfferTicket = ({ offer, info }) => {
 
       {/* Linea da staccare, con le due mezzelune ai lati */}
       <div aria-hidden="true" className="relative h-0">
-        <span className="absolute -left-3 -top-3 h-6 w-6 rounded-full bg-ink" />
-        <span className="absolute -right-3 -top-3 h-6 w-6 rounded-full bg-ink" />
+        <span className="absolute -left-3 -top-3 h-6 w-6 rounded-full bg-ink-deep" />
+        <span className="absolute -right-3 -top-3 h-6 w-6 rounded-full bg-ink-deep" />
         <span className="absolute inset-x-5 top-0 border-t-2 border-dashed border-ink/25" />
       </div>
 
@@ -81,8 +81,8 @@ export const OffersBoardSection = ({ promotions, info }) => {
   const sectionRef = useRef(null);
 
   return (
-    <section ref={sectionRef} id="offerte" aria-labelledby="offerte-title" className="relative bg-ink py-20 md:py-28 lg:py-32">
-      <ScrollPulse targetRef={sectionRef} variant="right" />
+    <section ref={sectionRef} id="offerte" aria-labelledby="offerte-title" className="relative bg-ink-deep py-20 md:py-28 lg:py-32">
+      <ScrollPulse targetRef={sectionRef} variant="double" />
       <div className="relative mx-auto max-w-7xl px-5 sm:px-8">
         <EditButton onClick={() => navigate('/gestore-forme-2026')} className="right-5 top-0 sm:right-8" />
 

@@ -143,7 +143,7 @@ const CoursesSkeleton = () => (
   </div>
 );
 
-export const CoursesSection = ({ info }) => {
+export const CoursesSection = ({ info, showPulse = true }) => {
   const { courses, loading: coursesLoading, error } = useCourses();
   const { families, loading: familiesLoading } = useFamilies();
   const loading = coursesLoading || familiesLoading;
@@ -166,8 +166,8 @@ export const CoursesSection = ({ info }) => {
   };
 
   return (
-    <section ref={sectionRef} id="corsi" aria-labelledby="corsi-title" className="relative bg-ink-deep py-20 md:py-28 lg:py-32">
-      <ScrollPulse targetRef={sectionRef} />
+    <section ref={sectionRef} id="corsi" aria-labelledby="corsi-title" className="relative bg-ink py-20 md:py-28 lg:py-32">
+      {showPulse && <ScrollPulse targetRef={sectionRef} />}
       <div className="relative mx-auto max-w-7xl px-5 sm:px-8">
         <EditButton onClick={() => navigate('/gestore-forme-2026')} className="right-5 top-0 sm:right-8" />
 

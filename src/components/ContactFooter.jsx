@@ -22,7 +22,7 @@ export const ContactFooter = ({ info }) => {
 
   return (
     <footer ref={sectionRef} id="contatti" aria-labelledby="contatti-title" className="relative bg-ink-deep pt-20 md:pt-28 lg:pt-32">
-      <ScrollPulse targetRef={sectionRef} variant="calm" />
+      <ScrollPulse targetRef={sectionRef} variant="rise" />
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <div className="grid gap-12 lg:grid-cols-12 lg:gap-16">
           <div className="lg:col-span-5">
