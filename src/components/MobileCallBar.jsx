@@ -1,26 +1,10 @@
-import { useEffect, useState } from 'react';
 import { MapPin, Phone } from 'lucide-react';
+import { useScrollZones } from '../hooks/useScrollZones';
 
 // Barra in basso solo su telefono: compare dopo la prima schermata,
 // sparisce quando i contatti sono già visibili. Il contatto resta a un tocco, nella zona del pollice.
 export const MobileCallBar = ({ info }) => {
-  const [pastHero, setPastHero] = useState(false);
-  const [atContacts, setAtContacts] = useState(false);
-
-  useEffect(() => {
-    const hero = document.querySelector('main > section');
-    const contacts = document.getElementById('contatti');
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach((e) => {
-        if (e.target === hero) setPastHero(!e.isIntersecting);
-        if (e.target === contacts) setAtContacts(e.isIntersecting);
-      });
-    }, { rootMargin: '-35% 0px 0px 0px' });
-    if (hero) io.observe(hero);
-    if (contacts) io.observe(contacts);
-    return () => io.disconnect();
-  }, []);
-
+  const { pastHero, atContacts } = useScrollZones();
   const visible = pastHero && !atContacts;
 
   return (

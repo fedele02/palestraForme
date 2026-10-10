@@ -12,6 +12,7 @@ import { useSiteSettings } from './hooks/useSiteSettings';
 import { buildSiteInfo } from './lib/siteInfo';
 import { isPromotionVisible } from './lib/courses';
 import { MobileCallBar } from './components/MobileCallBar';
+import { ChatWidget } from './components/ChatWidget';
 
 // Caricato solo quando si visita /gestore-forme-2026, fuori dal bundle pubblico
 const AdminPage = lazy(() => import('./pages/AdminPage').then(m => ({ default: m.AdminPage })));
@@ -38,6 +39,7 @@ function MainSite() {
 				</main>
 				<ContactFooter info={info} />
 				<MobileCallBar info={info} />
+				<ChatWidget info={info} />
 			</div>
 		</MotionConfig>
 	);
