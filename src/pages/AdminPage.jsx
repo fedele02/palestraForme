@@ -8,6 +8,7 @@ import { friendlyError } from '../hooks/useTable';
 import { CourseForm } from '../components/admin/CourseForm';
 import { PromotionForm } from '../components/admin/PromotionForm';
 import { SettingsForm } from '../components/admin/SettingsForm';
+import { ChatUsage } from '../components/admin/ChatUsage';
 import { Button, DeleteButton, ErrorBox, Field, IconButton, StatusBadge, inputClass, useToast } from '../components/admin/ui';
 import { Logo } from '../components/Logo';
 import { courseImage, prepareCourses, promotionStatus } from '../lib/courses';
@@ -375,6 +376,7 @@ const TABS = [
   { id: 'courses', label: 'Corsi' },
   { id: 'promotions', label: 'Offerte' },
   { id: 'settings', label: 'Info palestra' },
+  { id: 'ai', label: 'Assistente AI', onlyFor: (email) => email.toLowerCase().startsWith('gestione') },
 ];
 
 export const AdminPage = () => {
@@ -384,6 +386,9 @@ export const AdminPage = () => {
 
   if (loading) return <div className="flex min-h-[100svh] items-center justify-center bg-ink text-mute">Caricamento…</div>;
   if (!user) return <LoginView isDemo={isDemo} />;
+
+  // Alcune schede (es. il contatore dell'assistente AI) sono solo per certi account
+  const tabs = TABS.filter((t) => !t.onlyFor || t.onlyFor(user.email || ''));
 
   return (
     <div className="min-h-[100svh] bg-ink text-paper">
@@ -405,7 +410,7 @@ export const AdminPage = () => {
         </div>
         <nav aria-label="Sezioni" className="mx-auto max-w-5xl px-4 sm:px-6">
           <ul className="flex gap-1 overflow-x-auto [scrollbar-width:none]">
-            {TABS.map((t) => (
+            {tabs.map((t) => (
               <li key={t.id}>
                 <button
                   type="button"
@@ -449,6 +454,15 @@ export const AdminPage = () => {
               <p className="mt-1 text-sm text-mute">Contatti, orari e mappa mostrati nella sezione Contatti e nei pulsanti del sito.</p>
             </div>
             <SettingsForm onSaved={() => toast.show('Informazioni salvate')} />
+          </>
+        )}
+        {tab === 'ai' && tabs.some((t) => t.id === 'ai') && (
+          <>
+            <div className="mb-8">
+              <h2 className="display text-[2.5rem] text-paper md:text-[3rem]">Assistente AI</h2>
+              <p className="mt-1 text-sm text-mute">Quanti messaggi riceve il Coach ForMe e quanto resta del piano gratuito.</p>
+            </div>
+            <ChatUsage />
           </>
         )}
       </main>

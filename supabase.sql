@@ -157,3 +157,60 @@ WHERE c.family_id IS NULL AND f.name = CASE
     WHEN c.title ~* 'pilates|postural|zen' THEN 'Benessere'
     ELSE 'Fitness'
 END;
+
+-- 6. Contatore dei messaggi dell'assistente AI (scheda "Assistente AI" dell'area admin)
+-- Una riga per giorno (ora italiana). La aggiorna il server della chat dopo ogni risposta;
+-- solo l'admin può leggerla. Eseguire una volta nel SQL Editor di Supabase.
+CREATE TABLE IF NOT EXISTS public.chat_usage (
+    day date PRIMARY KEY,
+    messages integer NOT NULL DEFAULT 0,          -- domande a cui l'AI ha risposto
+    blocked integer NOT NULL DEFAULT 0,           -- domande rifiutate perché il limite gratuito era finito
+    tokens integer NOT NULL DEFAULT 0,            -- token consumati (domanda + informazioni palestra + risposta)
+    limit_requests integer,                       -- limite di richieste al giorno del piano Groq
+    remaining_requests integer,                   -- richieste rimaste oggi, all'ultimo messaggio
+    updated_at timestamptz DEFAULT now()
+);
+
+ALTER TABLE public.chat_usage ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Contatore AI visibile solo all'admin" ON public.chat_usage;
+CREATE POLICY "Contatore AI visibile solo all'admin"
+ON public.chat_usage FOR SELECT
+USING (auth.role() = 'authenticated');
+
+-- Il server scrive solo tramite questa funzione (non può leggere né cancellare la tabella)
+CREATE OR REPLACE FUNCTION public.log_chat_usage(p_tokens integer, p_limit integer, p_remaining integer, p_blocked boolean)
+RETURNS void
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+    INSERT INTO public.chat_usage AS u (day, messages, blocked, tokens, limit_requests, remaining_requests, updated_at)
+    VALUES (
+        (now() AT TIME ZONE 'Europe/Rome')::date,
+        CASE WHEN p_blocked THEN 0 ELSE 1 END,
+        CASE WHEN p_blocked THEN 1 ELSE 0 END,
+        LEAST(GREATEST(COALESCE(p_tokens, 0), 0), 50000),
+        p_limit,
+        p_remaining,
+        now()
+    )
+    ON CONFLICT (day) DO UPDATE SET
+        messages = u.messages + EXCLUDED.messages,
+        blocked = u.blocked + EXCLUDED.blocked,
+        tokens = u.tokens + EXCLUDED.tokens,
+        limit_requests = COALESCE(EXCLUDED.limit_requests, u.limit_requests),
+        remaining_requests = COALESCE(EXCLUDED.remaining_requests, u.remaining_requests),
+        updated_at = now();
+$$;
+
+REVOKE ALL ON FUNCTION public.log_chat_usage(integer, integer, integer, boolean) FROM public;
+GRANT EXECUTE ON FUNCTION public.log_chat_usage(integer, integer, integer, boolean) TO anon, authenticated;
+
+-- 7. Il contatore dell'assistente AI è visibile solo agli account la cui email inizia con "gestione"
+-- (eseguire una volta nel SQL Editor di Supabase, dopo la parte 6)
+DROP POLICY IF EXISTS "Contatore AI visibile solo all'admin" ON public.chat_usage;
+DROP POLICY IF EXISTS "Contatore AI visibile solo a gestione" ON public.chat_usage;
+CREATE POLICY "Contatore AI visibile solo a gestione"
+ON public.chat_usage FOR SELECT
+USING (lower(auth.jwt() ->> 'email') LIKE 'gestione%');

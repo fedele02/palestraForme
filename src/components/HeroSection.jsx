@@ -47,7 +47,7 @@ export const HeroSection = ({ info }) => {
       {/* Velo per la leggibilità: dal basso su telefono, da sinistra su schermi larghi */}
       <div aria-hidden="true" className="absolute inset-0 -z-10 bg-[linear-gradient(to_top,#161D36_8%,rgb(22_29_54/0.82)_45%,rgb(22_29_54/0.35)_100%)] md:bg-[linear-gradient(to_right,#161D36_0%,rgb(22_29_54/0.86)_38%,rgb(22_29_54/0.25)_75%),linear-gradient(to_top,#161D36_0%,transparent_30%)]" />
 
-      <div className="mx-auto w-full max-w-7xl px-5 pb-[calc(2.75rem+env(safe-area-inset-bottom))] pt-32 sm:px-8 md:pb-20 lg:pb-24">
+      <div className="mx-auto w-full max-w-7xl px-5 pb-[calc(6rem+env(safe-area-inset-bottom))] pt-32 sm:px-8 md:pb-20 lg:pb-24">
         <h1
           id="hero-title"
           className="display text-[clamp(2.25rem,12.6vw,4.75rem)] text-paper [font-stretch:62%] md:text-[5.25rem] lg:text-[6rem]"

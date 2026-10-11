@@ -172,21 +172,12 @@
   }
 }
 
-/* Assistente: il pallino "batte" (doppio anello, come lub-dub) finché non viene usato */
-.chat-ripple {
-  position: absolute;
-  inset: 0;
-  border-radius: 9999px;
-  border: 2px solid var(--color-sun);
-  opacity: 0;
-  pointer-events: none;
-  animation: chat-ripple 2.8s cubic-bezier(0.22, 1, 0.36, 1) infinite;
-}
-.chat-ripple--late { animation-delay: 0.22s; }
-@keyframes chat-ripple {
-  0% { opacity: 0.7; transform: scale(1); }
-  32% { opacity: 0; transform: scale(1.5); }
-  100% { opacity: 0; transform: scale(1.5); }
+/* Omino dell'assistente: contorno blu, leggibile anche sopra le card gialle */
+.mascot-outline {
+  filter:
+    drop-shadow(2px 0 0 var(--color-ink)) drop-shadow(-2px 0 0 var(--color-ink))
+    drop-shadow(0 2px 0 var(--color-ink)) drop-shadow(0 -2px 0 var(--color-ink))
+    drop-shadow(0 6px 12px rgb(0 0 0 / 0.45));
 }
 
 /* "Sta scrivendo": un tratto di luce corre lungo il battito */
@@ -200,6 +191,5 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .chat-ripple { display: none; }
   .chat-typing path { animation: none; stroke-dasharray: none; }
 }

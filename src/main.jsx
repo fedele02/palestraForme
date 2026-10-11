@@ -4,6 +4,9 @@ import '@fontsource-variable/archivo/wdth.css'
 import './index.css'
 import App from './App.jsx'
 
+// Al refresh si riparte sempre dall'inizio: il browser non deve riportare dove si era
+if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+
 const faviconHref = `${import.meta.env.BASE_URL}favicon-logo2.svg?v=5`;
 let favicon = document.querySelector("link[rel='icon']");
 if (!favicon) {
