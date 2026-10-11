@@ -14,8 +14,6 @@ export const TIPS = [
 // Domande pronte nella chat (la prima è il questionario guidato)
 export const SUGGESTIONS = [
   'Che corsi ci sono?',
-  'Ho mal di schiena, che corso mi consigli?',
-  'Voglio dimagrire, da dove parto?',
   'Avete offerte adesso?',
   'Dove siete e quando aprite?',
 ];

@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { ArrowUp, ListChecks, Phone, RotateCcw, X } from 'lucide-react';
 import { useScrollZones } from '../hooks/useScrollZones';
 import { DISCLAIMER, FINDER_LABEL, PROFANITY_EMPTY, PROFANITY_NOTICE, SUGGESTIONS, TIPS, WELCOME } from '../lib/chatContent';
 import { stripProfanity } from '../lib/profanity';
 import { ChatMascot } from './ChatMascot';
+import { ACTIONS } from '../lib/mascotActions';
 import { CourseFinder } from './CourseFinder';
 
 // Assistente AI in basso a destra: l'omino-coach che saluta, con un fumetto che alterna esempi di domande
@@ -15,9 +16,15 @@ import { CourseFinder } from './CourseFinder';
 const TIP_MS = 4200;
 const TIP_PAUSE_MS = 40000;
 const TIP_ROUNDS = 3;
-const WAVE_EVERY_MS = 11000;
-// L'omino compare scorrendo oltre la prima schermata, o comunque dopo questo tempo
-const SHOW_AFTER_MS = 5000;
+// L'omino c'è subito: arriva da destra saltellando e mostra i muscoli, poi saluta e parla.
+// Dopo, ogni ACTION_EVERY_MS fa il prossimo esercizio di IDLE_ACTIONS (esercizi in ChatMascot).
+// Il momento del caricamento serve a far partire saluto e fumetto a entrata finita anche se l'omino
+// viene riaperto dopo aver chiuso la chat.
+const ENTRANCE = 'flex';
+const IDLE_ACTIONS = ['wave', 'press', 'drink', 'curl', 'flex'];
+const ACTION_EVERY_MS = 9000;
+const INTRO_MS = ACTIONS[ENTRANCE].dur * 1000;
+const BOOT_AT = typeof performance !== 'undefined' ? performance.now() : 0;
 
 const STORE_KEY = 'forme-chat';
 const NOTE_START = DISCLAIMER.split(':')[0] + ':'; // "Ricorda:"
@@ -140,26 +147,33 @@ export const ChatWidget = ({ info }) => {
   const launcherRef = useRef(null);
   const inputRef = useRef(null);
   const logRef = useRef(null);
-  const [timerUp, setTimerUp] = useState(false);
   const [tip, setTip] = useState(null);
-  const [wave, setWave] = useState(0);
+  // Esercizio in corso dell'omino: si parte con l'entrata
+  const [action, setAction] = useState({ name: ENTRANCE, n: 1 });
+  const [introDone, setIntroDone] = useState(false);
+  const reduceMotion = useReducedMotion();
 
-  // L'omino (su PC e su telefono) compare dopo la prima schermata oppure dopo qualche secondo
-  // (su telefono sta sotto i pulsanti dell'hero) e su telefono sale sopra la barra "Chiama" quando c'è
+  // Quanto manca alla fine dell'entrata (con "extra" di margine), mai meno di "min"
+  const afterIntro = (extra, min) => (
+    reduceMotion ? min : Math.max(min, BOOT_AT + INTRO_MS + extra - performance.now())
+  );
+
+  // L'omino è sempre in pagina (su PC e su telefono). Su telefono sale sopra la barra "Chiama" quando c'è
   useEffect(() => {
-    const t = setTimeout(() => setTimerUp(true), SHOW_AFTER_MS);
+    const t = setTimeout(() => setIntroDone(true), INTRO_MS + 200);
     return () => clearTimeout(t);
   }, []);
-  const dockVisible = pastHero || timerUp;
   const aboveCallBar = !isDesktop && pastHero && !atContacts;
-  const mascotActive = dockVisible && !open;
+  const mascotActive = !open;
 
-  // L'omino saluta appena compare e poi ogni tanto
+  // Finita l'entrata l'omino saluta, e poi ogni tanto fa il prossimo esercizio
   useEffect(() => {
     if (!mascotActive) return undefined;
-    const first = setTimeout(() => setWave((w) => w + 1), 500);
-    const again = setInterval(() => setWave((w) => w + 1), WAVE_EVERY_MS);
+    const next = () => setAction((a) => ({ name: IDLE_ACTIONS[(a.n - 1) % IDLE_ACTIONS.length], n: a.n + 1 }));
+    const first = setTimeout(next, afterIntro(0, 500));
+    const again = setInterval(next, ACTION_EVERY_MS);
     return () => { clearTimeout(first); clearInterval(again); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mascotActive]);
 
   // Fumetto che alterna gli esempi di domande, finché la chat non viene usata
@@ -180,8 +194,9 @@ export const ChatWidget = ({ info }) => {
       rounds += 1;
       if (rounds < TIP_ROUNDS) t = setTimeout(step, TIP_PAUSE_MS);
     };
-    t = setTimeout(step, 900);
+    t = setTimeout(step, afterIntro(300, 900));
     return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mascotActive, usedOnce]);
   const bubbleShown = mascotActive && !usedOnce && tip !== null;
 
@@ -312,10 +327,10 @@ export const ChatWidget = ({ info }) => {
     <>
       {/* Omino + fumetto con gli esempi di domande */}
       <div
-        inert={!dockVisible || (open && !isDesktop) ? true : undefined}
-        className={`fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] right-4 z-40 flex flex-col items-end gap-3 transition-[transform,opacity] duration-300 ease-[var(--ease-out-strong)] md:bottom-6 md:right-6 ${
-          dockVisible ? 'opacity-100' : 'pointer-events-none translate-y-6 opacity-0'
-        } ${aboveCallBar ? '-translate-y-[4.75rem]' : ''}`}
+        inert={open && !isDesktop ? true : undefined}
+        className={`fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] right-4 z-40 flex flex-col items-end gap-3 transition-transform duration-300 ease-[var(--ease-out-strong)] md:bottom-6 md:right-6 ${
+          aboveCallBar ? '-translate-y-[4.75rem]' : ''
+        }`}
       >
         {!(open && isDesktop) && (
           <button
@@ -342,12 +357,21 @@ export const ChatWidget = ({ info }) => {
                 </motion.span>
               )}
             </AnimatePresence>
-            <span className="mascot-outline relative block h-16 w-16 shrink-0 md:h-[76px] md:w-[76px]">
-              <ChatMascot size={isDesktop ? 76 : 64} wave={wave} />
+            {/* Arriva da destra camminando (tre saltelli); in riduzione movimento resta fermo */}
+            <motion.span
+              initial={introDone ? false : { x: 150, y: 0 }}
+              animate={{ x: 0, y: introDone ? 0 : [0, -7, 0, -7, 0, -7, 0] }}
+              transition={{
+                x: { duration: 0.9, ease: [0.23, 1, 0.32, 1] },
+                y: { duration: 0.9, ease: 'easeInOut' },
+              }}
+              className="mascot-outline relative block h-16 w-16 shrink-0 md:h-[76px] md:w-[76px]"
+            >
+              <ChatMascot size={isDesktop ? 76 : 64} action={action} />
               <span aria-hidden="true" className="absolute -left-1 top-0 rounded-full border border-sun/70 bg-ink px-1.5 text-xs font-bold leading-5 text-sun">
                 AI
               </span>
-            </span>
+            </motion.span>
           </button>
         )}
 
