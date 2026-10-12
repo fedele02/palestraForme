@@ -17,23 +17,18 @@ import { CourseFinder } from './CourseFinder';
 // poi non tornano più, così non disturbano (specie su telefono)
 const TIP_MS = 4200;
 // L'omino c'è subito: a ogni apertura della pagina arriva da destra saltellando e saluta (GREETING).
-// Mentre passano i messaggi del fumetto resta tranquillo; finito l'ultimo parte col manubrio (FIRST_EXERCISE).
-// Poi segue sempre lo stesso ritmo: esercizio, si asciuga la fronte, beve, riposa REST_MS, nuovo esercizio
-// (a caso tra EXERCISES, mai lo stesso di prima; esercizi in src/lib/mascotActions.js).
+// Mentre passano i messaggi del fumetto resta tranquillo; finito l'ultimo comincia gli esercizi.
+// Poi segue sempre lo stesso ritmo: esercizio, si asciuga la fronte, beve, riposa REST_MS, esercizio successivo
+// nell'ordine di EXERCISES (pesi per primi, ballo per ultimo, poi si ricomincia; esercizi in src/lib/mascotActions.js).
 // Se il visitatore si ferma su un corso, l'esercizio successivo è quello legato al corso (useMascotReactions).
 // Il momento del caricamento serve a far partire esercizi e fumetto a entrata finita anche se l'omino
 // viene riaperto dopo aver chiuso la chat.
 const GREETING = 'wave';
-const FIRST_EXERCISE = 'press';
-const EXERCISES = ['press', 'curl', 'fight', 'dance', 'spin'];
+const EXERCISES = ['press', 'spin', 'curl', 'fight', 'dance'];
 const RECOVERY = ['towel', 'drink'];
 // Pausa prima di asciugamano e borraccia: un attimo di respiro, non di scatto
 const RECOVERY_GAP_MS = 1400;
 const REST_MS = 5000;
-const pickExercise = (last) => {
-  const pool = EXERCISES.filter((a) => a !== last);
-  return pool[Math.floor(Math.random() * pool.length)];
-};
 const INTRO_MS = 900;
 const BOOT_AT = typeof performance !== 'undefined' ? performance.now() : 0;
 
@@ -169,6 +164,8 @@ export const ChatWidget = ({ info }) => {
   const playing = useRef({ until: 0 });
   const upNext = useRef(GREETING);
   const lastExercise = useRef(null);
+  // Posizione nel giro di EXERCISES (le reazioni ai corsi non la cambiano)
+  const round = useRef(0);
   const reduceMotion = useReducedMotion();
 
   // Quanto manca alla fine dell'entrata (con "extra" di margine), mai meno di "min"
@@ -187,10 +184,12 @@ export const ChatWidget = ({ info }) => {
   // Scelta fuori dall'updater di setAction: in StrictMode l'updater gira due volte
   const play = (name) => {
     playing.current = { until: performance.now() + ACTIONS[name].dur * 1000 };
-    if (name === GREETING) upNext.current = FIRST_EXERCISE;
+    if (name === GREETING) upNext.current = EXERCISES[0];
     else if (name === 'towel') upNext.current = 'drink';
-    else if (name === 'drink') upNext.current = pickExercise(lastExercise.current);
+    else if (name === 'drink') upNext.current = EXERCISES[round.current % EXERCISES.length];
     else {
+      // Esercizio del giro (non una reazione a un corso fuori ordine): si passa al successivo
+      if (name === upNext.current) round.current += 1;
       lastExercise.current = name;
       upNext.current = 'towel';
     }
@@ -203,7 +202,7 @@ export const ChatWidget = ({ info }) => {
     playing.current = { until: performance.now() + afterIntro(0, 500) - RECOVERY_GAP_MS };
     const tick = setInterval(() => {
       // Dopo il saluto aspetta la fine dei messaggi del fumetto
-      if (!lastExercise.current && upNext.current === FIRST_EXERCISE && !tipsDone.current) return;
+      if (upNext.current !== GREETING && !lastExercise.current && !tipsDone.current) return;
       const gap = RECOVERY.includes(upNext.current) || !lastExercise.current ? RECOVERY_GAP_MS : REST_MS;
       if (performance.now() >= playing.current.until + gap) play(upNext.current);
     }, 250);
@@ -381,8 +380,10 @@ export const ChatWidget = ({ info }) => {
             onClick={() => openChat(bubbleShown && !!TIPS[tip]?.finder)}
             aria-label="Hai domande? Chiedi al coach AI di ForMe"
             aria-expanded={open}
-            className="flex cursor-pointer items-center gap-1 transition-transform duration-150 active:scale-95"
+            className="relative flex cursor-pointer items-center transition-transform duration-150 active:scale-95"
           >
+            {/* Fumetto fuori dall'impaginazione, centrato sull'omino: un messaggio su più righe non lo sposta */}
+            <span className="pointer-events-none absolute inset-y-0 right-full mr-1 flex items-center">
             <AnimatePresence mode="wait">
               {bubbleShown && (
                 <motion.span
@@ -392,13 +393,14 @@ export const ChatWidget = ({ info }) => {
                   animate={{ opacity: 1, x: 0, scale: 1 }}
                   exit={{ opacity: 0, x: 4 }}
                   transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
-                  className="relative w-max max-w-[min(15.5rem,calc(100vw-7rem))] origin-right rounded-[8px] border border-line bg-ink-raised px-3.5 py-2.5 text-left text-[0.9375rem] font-medium leading-snug text-paper shadow-[0_12px_32px_rgb(0_0_0/0.45)]"
+                  className="pointer-events-auto relative w-max max-w-[min(15.5rem,calc(100vw-7rem))] origin-right rounded-[8px] border border-line bg-ink-raised px-3.5 py-2.5 text-left text-[0.9375rem] font-medium leading-snug text-paper shadow-[0_12px_32px_rgb(0_0_0/0.45)]"
                 >
                   {TIPS[tip].text}
                   <span className="absolute -right-[6px] top-1/2 h-3 w-3 -translate-y-1/2 rotate-45 border-r border-t border-line bg-ink-raised" />
                 </motion.span>
               )}
             </AnimatePresence>
+            </span>
             {/* Arriva da destra camminando (tre saltelli); in riduzione movimento resta fermo */}
             <motion.span
               initial={introDone ? false : { x: 150, y: 0 }}

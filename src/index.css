@@ -22,6 +22,14 @@
 }
 
 @layer base {
+  /* Segnale per Samsung Internet: il sito ha già un suo tema scuro, quindi la modalità scura
+     del browser non deve ricolorarlo (pulsanti gialli che diventano marroni, omino scurito) */
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: only dark;
+    }
+  }
+
   html {
     -webkit-tap-highlight-color: transparent;
     -webkit-text-size-adjust: 100%;
@@ -29,7 +37,7 @@
     scroll-padding-top: 4.5rem;
     background: var(--color-ink);
     color: var(--color-paper);
-    color-scheme: dark;
+    color-scheme: only dark;
     scrollbar-color: rgb(214 220 240 / 0.28) var(--color-ink-deep);
   }
 
