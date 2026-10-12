@@ -42,7 +42,8 @@ const CourseCard = ({ course, idx, total }) => {
   const desktopAspect = wide ? 'md:aspect-[21/9]' : 'md:aspect-[4/3]';
 
   return (
-    <article className={wide ? 'md:col-span-2' : ''}>
+    // data-mascot: se il visitatore si ferma su questo corso, l'omino dell'assistente fa l'attività legata (ChatWidget)
+    <article data-mascot={course.kind} className={wide ? 'md:col-span-2' : ''}>
       <div
         ref={frameRef}
         className={`group relative -mx-5 overflow-hidden bg-ink-raised sm:mx-0 sm:rounded-[4px] ${mobileAspect} ${desktopAspect}`}

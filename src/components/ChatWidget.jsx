@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { ArrowUp, ListChecks, Phone, RotateCcw, X } from 'lucide-react';
 import { useScrollZones } from '../hooks/useScrollZones';
+import { useMascotReactions } from '../hooks/useMascotReactions';
 import { DISCLAIMER, FINDER_LABEL, PROFANITY_EMPTY, PROFANITY_NOTICE, SUGGESTIONS, TIPS, WELCOME } from '../lib/chatContent';
 import { stripProfanity } from '../lib/profanity';
 import { ChatMascot } from './ChatMascot';
@@ -12,18 +13,26 @@ import { CourseFinder } from './CourseFinder';
 // (uguale su PC e telefono). I testi (domande, fumetti, questionario) sono in src/lib/chatContent.js.
 // Risposte da /api/chat (server/chat.js).
 
-// Fumetto dell'omino: un giro di messaggi, poi pausa, al massimo TIP_ROUNDS giri
+// Fumetto dell'omino: i messaggi di TIPS passano una volta sola per visita (poi non disturbano, specie su telefono)
 const TIP_MS = 4200;
-const TIP_PAUSE_MS = 40000;
-const TIP_ROUNDS = 3;
-// L'omino c'è subito: arriva da destra saltellando e mostra i muscoli, poi saluta e parla.
-// Dopo, ogni ACTION_EVERY_MS fa il prossimo esercizio di IDLE_ACTIONS (esercizi in ChatMascot).
-// Il momento del caricamento serve a far partire saluto e fumetto a entrata finita anche se l'omino
+const TIPS_SEEN_KEY = 'forme-tips-seen';
+// L'omino c'è subito: arriva da destra saltellando e parte col manubrio (FIRST_EXERCISE).
+// Poi segue sempre lo stesso ritmo: esercizio, si asciuga la fronte, beve, riposa REST_MS, nuovo esercizio
+// (a caso tra EXERCISES, mai lo stesso di prima; esercizi in src/lib/mascotActions.js).
+// Se il visitatore si ferma su un corso, l'esercizio successivo è quello legato al corso (useMascotReactions).
+// Il momento del caricamento serve a far partire esercizi e fumetto a entrata finita anche se l'omino
 // viene riaperto dopo aver chiuso la chat.
-const ENTRANCE = 'flex';
-const IDLE_ACTIONS = ['wave', 'press', 'drink', 'curl', 'flex'];
-const ACTION_EVERY_MS = 9000;
-const INTRO_MS = ACTIONS[ENTRANCE].dur * 1000;
+const FIRST_EXERCISE = 'press';
+const EXERCISES = ['press', 'curl', 'fight', 'dance', 'spin'];
+const RECOVERY = ['towel', 'drink'];
+// Pausa prima di asciugamano e borraccia: un attimo di respiro, non di scatto
+const RECOVERY_GAP_MS = 1400;
+const REST_MS = 5000;
+const pickExercise = (last) => {
+  const pool = EXERCISES.filter((a) => a !== last);
+  return pool[Math.floor(Math.random() * pool.length)];
+};
+const INTRO_MS = 900;
 const BOOT_AT = typeof performance !== 'undefined' ? performance.now() : 0;
 
 const STORE_KEY = 'forme-chat';
@@ -140,17 +149,21 @@ export const ChatWidget = ({ info }) => {
   const [input, setInput] = useState('');
   const [streaming, setStreaming] = useState(false);
   const [error, setError] = useState(null); // 'busy' | 'error'
-  // A ogni caricamento della pagina l'omino ripropone le sue domande, finché non si apre la chat
-  const [usedOnce, setUsedOnce] = useState(false);
+  // I messaggi del fumetto si vedono una volta per visita, e non più dopo aver aperto la chat
+  const [usedOnce, setUsedOnce] = useState(() => session.get(TIPS_SEEN_KEY) === '1');
   const [finder, setFinder] = useState(false);
 
   const launcherRef = useRef(null);
   const inputRef = useRef(null);
   const logRef = useRef(null);
   const [tip, setTip] = useState(null);
-  // Esercizio in corso dell'omino: si parte con l'entrata
-  const [action, setAction] = useState({ name: ENTRANCE, n: 1 });
+  // Esercizio in corso dell'omino (null = fermo, durante l'entrata)
+  const [action, setAction] = useState(null);
   const [introDone, setIntroDone] = useState(false);
+  // Fine dell'attività in corso, la prossima in programma e l'ultimo esercizio fatto
+  const playing = useRef({ until: 0 });
+  const upNext = useRef(FIRST_EXERCISE);
+  const lastExercise = useRef(null);
   const reduceMotion = useReducedMotion();
 
   // Quanto manca alla fine dell'entrata (con "extra" di margine), mai meno di "min"
@@ -166,21 +179,41 @@ export const ChatWidget = ({ info }) => {
   const aboveCallBar = !isDesktop && pastHero && !atContacts;
   const mascotActive = !open;
 
-  // Finita l'entrata l'omino saluta, e poi ogni tanto fa il prossimo esercizio
+  // Scelta fuori dall'updater di setAction: in StrictMode l'updater gira due volte
+  const play = (name) => {
+    playing.current = { until: performance.now() + ACTIONS[name].dur * 1000 };
+    if (name === 'towel') upNext.current = 'drink';
+    else if (name === 'drink') upNext.current = pickExercise(lastExercise.current);
+    else {
+      lastExercise.current = name;
+      upNext.current = 'towel';
+    }
+    setAction((a) => ({ name, n: (a?.n ?? 0) + 1 }));
+  };
+
+  // Finita l'entrata parte il primo esercizio; poi asciugamano e borraccia subito, e un po' di riposo
   useEffect(() => {
     if (!mascotActive) return undefined;
-    const next = () => setAction((a) => ({ name: IDLE_ACTIONS[(a.n - 1) % IDLE_ACTIONS.length], n: a.n + 1 }));
-    const first = setTimeout(next, afterIntro(0, 500));
-    const again = setInterval(next, ACTION_EVERY_MS);
-    return () => { clearTimeout(first); clearInterval(again); };
+    playing.current = { until: performance.now() + afterIntro(0, 500) - RECOVERY_GAP_MS };
+    const tick = setInterval(() => {
+      const gap = RECOVERY.includes(upNext.current) || !lastExercise.current ? RECOVERY_GAP_MS : REST_MS;
+      if (performance.now() >= playing.current.until + gap) play(upNext.current);
+    }, 250);
+    return () => clearInterval(tick);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mascotActive]);
+
+  // Reazioni ai corsi su cui il visitatore si ferma: solo a riposo (non a metà esercizio, asciugamano o bevuta)
+  useMascotReactions(mascotActive && introDone && !reduceMotion, (name) => {
+    if (RECOVERY.includes(upNext.current) || performance.now() < playing.current.until + 400) return false;
+    play(name);
+    return true;
+  });
 
   // Fumetto che alterna gli esempi di domande, finché la chat non viene usata
   useEffect(() => {
     if (!mascotActive || usedOnce) return undefined;
     let i = 0;
-    let rounds = 0;
     let t;
     const step = () => {
       if (i < TIPS.length) {
@@ -190,9 +223,8 @@ export const ChatWidget = ({ info }) => {
         return;
       }
       setTip(null);
-      i = 0;
-      rounds += 1;
-      if (rounds < TIP_ROUNDS) t = setTimeout(step, TIP_PAUSE_MS);
+      session.set(TIPS_SEEN_KEY, '1');
+      setUsedOnce(true);
     };
     t = setTimeout(step, afterIntro(300, 900));
     return () => clearTimeout(t);
@@ -204,6 +236,7 @@ export const ChatWidget = ({ info }) => {
 
   // startFinder: apre la chat direttamente sul questionario "trova il tuo corso"
   const openChat = (startFinder = false) => {
+    session.set(TIPS_SEEN_KEY, '1');
     setUsedOnce(true);
     if (startFinder) setFinder(true);
     setOpen(true);
