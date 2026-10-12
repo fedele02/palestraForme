@@ -211,10 +211,10 @@ export const ChatWidget = ({ info }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mascotActive]);
 
-  // Reazioni ai corsi su cui il visitatore si ferma: solo a riposo (non prima del saluto, né a metà esercizio,
-  // asciugamano o bevuta)
+  // Reazioni ai corsi su cui il visitatore si ferma: solo a riposo, dopo saluto, messaggi del fumetto e primo
+  // esercizio coi pesi (mai a metà esercizio, asciugamano o bevuta)
   useMascotReactions(mascotActive && introDone && !reduceMotion, (name) => {
-    if (!EXERCISES.includes(name) || upNext.current === GREETING || RECOVERY.includes(upNext.current) || performance.now() < playing.current.until + 400) return false;
+    if (!EXERCISES.includes(name) || !lastExercise.current || RECOVERY.includes(upNext.current) || performance.now() < playing.current.until + 400) return false;
     play(name);
     return true;
   });
