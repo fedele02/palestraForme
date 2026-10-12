@@ -13,11 +13,11 @@ import { CourseFinder } from './CourseFinder';
 // (uguale su PC e telefono). I testi (domande, fumetti, questionario) sono in src/lib/chatContent.js.
 // Risposte da /api/chat (server/chat.js).
 
-// Fumetto dell'omino: i messaggi di TIPS passano una volta sola per visita (poi non disturbano, specie su telefono)
+// Fumetto dell'omino: i messaggi di TIPS passano una volta a ogni apertura della pagina (anche dopo un refresh),
+// poi non tornano più, così non disturbano (specie su telefono)
 const TIP_MS = 4200;
-const TIPS_SEEN_KEY = 'forme-tips-seen';
-// L'omino c'è subito: a ogni apertura della pagina arriva da destra saltellando, saluta (GREETING)
-// e parte col manubrio (FIRST_EXERCISE).
+// L'omino c'è subito: a ogni apertura della pagina arriva da destra saltellando e saluta (GREETING).
+// Mentre passano i messaggi del fumetto resta tranquillo; finito l'ultimo parte col manubrio (FIRST_EXERCISE).
 // Poi segue sempre lo stesso ritmo: esercizio, si asciuga la fronte, beve, riposa REST_MS, nuovo esercizio
 // (a caso tra EXERCISES, mai lo stesso di prima; esercizi in src/lib/mascotActions.js).
 // Se il visitatore si ferma su un corso, l'esercizio successivo è quello legato al corso (useMascotReactions).
@@ -151,8 +151,11 @@ export const ChatWidget = ({ info }) => {
   const [input, setInput] = useState('');
   const [streaming, setStreaming] = useState(false);
   const [error, setError] = useState(null); // 'busy' | 'error'
-  // I messaggi del fumetto si vedono una volta per visita, e non più dopo aver aperto la chat
-  const [usedOnce, setUsedOnce] = useState(() => session.get(TIPS_SEEN_KEY) === '1');
+  // I messaggi del fumetto si vedono una volta per caricamento della pagina, e non più dopo aver aperto la chat
+  const [usedOnce, setUsedOnce] = useState(false);
+  // Per la routine dell'omino (che gira in un intervallo): i messaggi del fumetto sono finiti?
+  const tipsDone = useRef(usedOnce);
+  useEffect(() => { tipsDone.current = usedOnce; }, [usedOnce]);
   const [finder, setFinder] = useState(false);
 
   const launcherRef = useRef(null);
@@ -199,6 +202,8 @@ export const ChatWidget = ({ info }) => {
     if (!mascotActive) return undefined;
     playing.current = { until: performance.now() + afterIntro(0, 500) - RECOVERY_GAP_MS };
     const tick = setInterval(() => {
+      // Dopo il saluto aspetta la fine dei messaggi del fumetto
+      if (!lastExercise.current && upNext.current === FIRST_EXERCISE && !tipsDone.current) return;
       const gap = RECOVERY.includes(upNext.current) || !lastExercise.current ? RECOVERY_GAP_MS : REST_MS;
       if (performance.now() >= playing.current.until + gap) play(upNext.current);
     }, 250);
@@ -227,8 +232,9 @@ export const ChatWidget = ({ info }) => {
         return;
       }
       setTip(null);
-      session.set(TIPS_SEEN_KEY, '1');
       setUsedOnce(true);
+      // Un attimo di respiro tra l'ultimo messaggio e il primo esercizio
+      playing.current = { until: performance.now() };
     };
     t = setTimeout(step, afterIntro(300, 900));
     return () => clearTimeout(t);
@@ -240,7 +246,6 @@ export const ChatWidget = ({ info }) => {
 
   // startFinder: apre la chat direttamente sul questionario "trova il tuo corso"
   const openChat = (startFinder = false) => {
-    session.set(TIPS_SEEN_KEY, '1');
     setUsedOnce(true);
     if (startFinder) setFinder(true);
     setOpen(true);

@@ -4,11 +4,13 @@
 // Domanda che avvia il questionario guidato "trova il corso giusto"
 export const FINDER_LABEL = 'Aiutami a scegliere il corso migliore per me';
 
-// Fumetto dell'omino su telefono: i messaggi si alternano. finder: true = toccandolo parte il questionario
+// Fumetto dell'omino (telefono e PC): i messaggi passano una volta per visita. finder: true = toccandolo parte il questionario
 export const TIPS = [
   { text: 'Ciao! Sono il coach AI di ForMe: chiedimi quello che vuoi' },
   { text: 'Non sai quale corso scegliere? Ti aiuto io in un minuto', finder: true },
   { text: 'Corsi, orari, offerte: chiedi pure' },
+  // L'ultimo: dopo questo l'omino comincia ad allenarsi (ChatWidget)
+  { text: "Dai un'occhiata al sito, io resto qui ad allenarmi. Per qualsiasi cosa chiedi pure" },
 ];
 
 // Domande pronte nella chat (la prima è il questionario guidato)
