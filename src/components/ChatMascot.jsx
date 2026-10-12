@@ -170,7 +170,7 @@ export const ChatMascot = ({ size = 64, action = null, idle = true, className = 
       aria-hidden="true"
       className={`overflow-visible ${className}`}
     >
-      {/* Tutto il corpo: saltelli, ondeggiamenti, inchino (perno in basso al centro) */}
+      {/* Tutto il corpo: saltelli, ondeggiamenti, in sella alla bici (perno in basso al centro) */}
       <motion.g
         style={{ originX: 0.5, originY: 1 }}
         initial={{ x: 0, y: 0, rotate: 0, scaleX: 1 }}

@@ -16,12 +16,14 @@ import { CourseFinder } from './CourseFinder';
 // Fumetto dell'omino: i messaggi di TIPS passano una volta sola per visita (poi non disturbano, specie su telefono)
 const TIP_MS = 4200;
 const TIPS_SEEN_KEY = 'forme-tips-seen';
-// L'omino c'è subito: arriva da destra saltellando e parte col manubrio (FIRST_EXERCISE).
+// L'omino c'è subito: a ogni apertura della pagina arriva da destra saltellando, saluta (GREETING)
+// e parte col manubrio (FIRST_EXERCISE).
 // Poi segue sempre lo stesso ritmo: esercizio, si asciuga la fronte, beve, riposa REST_MS, nuovo esercizio
 // (a caso tra EXERCISES, mai lo stesso di prima; esercizi in src/lib/mascotActions.js).
 // Se il visitatore si ferma su un corso, l'esercizio successivo è quello legato al corso (useMascotReactions).
 // Il momento del caricamento serve a far partire esercizi e fumetto a entrata finita anche se l'omino
 // viene riaperto dopo aver chiuso la chat.
+const GREETING = 'wave';
 const FIRST_EXERCISE = 'press';
 const EXERCISES = ['press', 'curl', 'fight', 'dance', 'spin'];
 const RECOVERY = ['towel', 'drink'];
@@ -162,7 +164,7 @@ export const ChatWidget = ({ info }) => {
   const [introDone, setIntroDone] = useState(false);
   // Fine dell'attività in corso, la prossima in programma e l'ultimo esercizio fatto
   const playing = useRef({ until: 0 });
-  const upNext = useRef(FIRST_EXERCISE);
+  const upNext = useRef(GREETING);
   const lastExercise = useRef(null);
   const reduceMotion = useReducedMotion();
 
@@ -182,7 +184,8 @@ export const ChatWidget = ({ info }) => {
   // Scelta fuori dall'updater di setAction: in StrictMode l'updater gira due volte
   const play = (name) => {
     playing.current = { until: performance.now() + ACTIONS[name].dur * 1000 };
-    if (name === 'towel') upNext.current = 'drink';
+    if (name === GREETING) upNext.current = FIRST_EXERCISE;
+    else if (name === 'towel') upNext.current = 'drink';
     else if (name === 'drink') upNext.current = pickExercise(lastExercise.current);
     else {
       lastExercise.current = name;
@@ -191,7 +194,7 @@ export const ChatWidget = ({ info }) => {
     setAction((a) => ({ name, n: (a?.n ?? 0) + 1 }));
   };
 
-  // Finita l'entrata parte il primo esercizio; poi asciugamano e borraccia subito, e un po' di riposo
+  // Finita l'entrata saluta e parte il primo esercizio; poi asciugamano e borraccia subito, e un po' di riposo
   useEffect(() => {
     if (!mascotActive) return undefined;
     playing.current = { until: performance.now() + afterIntro(0, 500) - RECOVERY_GAP_MS };
@@ -203,9 +206,10 @@ export const ChatWidget = ({ info }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mascotActive]);
 
-  // Reazioni ai corsi su cui il visitatore si ferma: solo a riposo (non a metà esercizio, asciugamano o bevuta)
+  // Reazioni ai corsi su cui il visitatore si ferma: solo a riposo (non prima del saluto, né a metà esercizio,
+  // asciugamano o bevuta)
   useMascotReactions(mascotActive && introDone && !reduceMotion, (name) => {
-    if (RECOVERY.includes(upNext.current) || performance.now() < playing.current.until + 400) return false;
+    if (!EXERCISES.includes(name) || upNext.current === GREETING || RECOVERY.includes(upNext.current) || performance.now() < playing.current.until + 400) return false;
     play(name);
     return true;
   });

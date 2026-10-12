@@ -4,7 +4,8 @@ import { useEffect, useRef } from 'react';
 // (le schede con data-mascot = tipo di corso, vedi CoursesSection) per DWELL_MS, chiama onReact con l'attività legata.
 // Una sola volta per tipo di corso e mai più spesso di COOLDOWN_MS, così l'omino non impazzisce.
 // onReact restituisce false se l'omino è occupato: si riprova tra poco, se il visitatore è ancora lì.
-const REACTIONS = { combat: 'fight', dance: 'dance', strength: 'press', cardio: 'towel', wellness: 'yawn' };
+// Solo esercizi: asciugamano e borraccia vengono da soli dopo (ChatWidget)
+const REACTIONS = { combat: 'fight', dance: 'dance', strength: 'press', cardio: 'spin' };
 const DWELL_MS = 2500;
 const COOLDOWN_MS = 20000;
 
